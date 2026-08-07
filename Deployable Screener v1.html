@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hooks Screener</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05070a;--panel:#090d12;--card:#0c1018;--border:#151d28;--borderhi:#1e2d40;
+  --gold:#e8c87a;--golddim:#2a2010;--cyan:#5ec4d6;--cyandim:#0a1e24;
+  --green:#4dba87;--greendim:#0a1f14;--red:#c95f6a;--reddim:#1f0a0d;
+  --orange:#e8924a;--text:#d6dfe8;--mid:#647d96;--dim:#2d3f52;
+  --mono:'IBM Plex Mono',monospace;--ui:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--ui);min-height:100vh}
+.header{background:var(--panel);border-bottom:1px solid var(--border);padding:18px 20px 14px;position:sticky;top:0;z-index:100}
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:4px}
+.title{font-size:20px;font-weight:600;color:var(--text);letter-spacing:-0.5px}
+.main{padding:18px 16px;max-width:860px;margin:0 auto}
+.field-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.field-label a{color:var(--cyan);text-decoration:none;font-size:8px}
+input,textarea,select{width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;margin-bottom:12px;transition:border-color .15s}
+input:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;min-height:58px}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.mode-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;text-align:left;transition:all .15s;color:var(--mid);width:100%}
+.mode-btn.active{background:var(--golddim);border-color:var(--gold);color:var(--gold)}
+.mode-title{font-size:12px;font-weight:600;margin-bottom:2px}
+.mode-desc{font-size:10px;opacity:.7;line-height:1.4}
+.config{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
+.spec-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.spec-pill{font-family:var(--mono);font-size:9px;color:var(--mid);display:flex;gap:3px}
+.spec-pill span{color:var(--gold);font-weight:700}
+.run-btn{width:100%;padding:13px;background:var(--golddim);border:2px solid var(--gold);border-radius:8px;color:var(--gold);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;margin-bottom:18px;transition:all .2s}
+.run-btn:hover{background:var(--gold);color:var(--bg)}
+.run-btn:disabled{opacity:.4;cursor:not-allowed}
+.progress{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--cyan);display:none}
+.progress.on{display:block}
+.pbar-wrap{background:var(--border);border-radius:4px;height:3px;margin-top:8px;overflow:hidden}
+.pbar{height:100%;background:var(--cyan);border-radius:4px;width:0;transition:width .3s}
+.err{background:var(--reddim);border:1px solid rgba(201,95,106,.4);border-radius:8px;padding:12px 14px;color:var(--red);font-family:var(--mono);font-size:11px;margin-bottom:14px;display:none}
+.err.on{display:block}
+.stats{display:flex;gap:16px;flex-wrap:wrap;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:14px;font-family:var(--mono);font-size:10px;color:var(--mid)}
+.stats strong{color:var(--text)}
+.sec-head{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color .2s}
+.card.trigger{border-color:rgba(77,186,135,.5)}
+.card-top{display:grid;grid-template-columns:68px 1fr auto;gap:10px;align-items:center;padding:11px 14px;cursor:pointer}
+.ticker{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);line-height:1.1}
+.exch{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
+.co-name{font-size:12px;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.co-ind{font-size:9px;color:var(--mid)}
+.price-col{text-align:right}
+.price{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)}
+.chg{font-family:var(--mono);font-size:10px}
+.chg.up{color:var(--green)}.chg.dn{color:var(--red)}
+.chips{display:flex;gap:5px;flex-wrap:wrap;padding:0 14px 11px}
+.chip{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-family:var(--mono);font-size:9px;letter-spacing:.5px}
+.chip.pass{background:rgba(77,186,135,.15);border:1px solid rgba(77,186,135,.3);color:var(--green)}
+.chip.fail{background:rgba(201,95,106,.12);border:1px solid rgba(201,95,106,.25);color:var(--red)}
+.chip-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.trig-banner{background:var(--greendim);border-top:1px solid rgba(77,186,135,.3);padding:7px 14px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px}
+.detail{border-top:1px solid var(--border);padding:14px;display:none;grid-template-columns:1fr 1fr;gap:16px}
+.detail.open{display:grid}
+.dt{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.mrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:11px}
+.mlabel{color:var(--mid)}
+.mval{font-family:var(--mono);font-size:11px;font-weight:600}
+.mval.pass{color:var(--green)}.mval.fail{color:var(--red)}.mval.n{color:var(--text)}
+.rh-wrap{margin-top:10px}
+.rh-box{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:9px;color:var(--mid);line-height:1.5;cursor:pointer;transition:border-color .15s;position:relative}
+.rh-box:hover{border-color:var(--gold)}
+.rh-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.toast{position:absolute;top:8px;right:8px;background:var(--green);color:var(--bg);font-size:9px;padding:2px 6px;border-radius:4px;opacity:0;transition:opacity .2s}
+.toast.on{opacity:1}
+.idle{text-align:center;padding:60px 20px;color:var(--dim)}
+.idle-icon{font-size:28px;margin-bottom:10px}
+.idle-txt{font-size:12px;color:var(--mid);margin-bottom:4px}
+.idle-sub{font-size:10px}
+.no-trigger{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:11px;color:var(--mid);line-height:1.6}
+@media(max-width:600px){
+  .header{padding:13px 14px 10px}
+  .title{font-size:17px}
+  .card-top{grid-template-columns:56px 1fr auto;gap:8px}
+  .ticker{font-size:13px}
+  .detail{grid-template-columns:1fr}
+  .main{padding:12px}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">◈ Hooks Screener · v0.1</div>
+  <div class="title">Quality · Momentum · Edge</div>
+</div>
+
+<div class="main">
+
+  <div style="margin-bottom:12px">
+    <div class="field-label">What do you want to do?</div>
+    <div class="mode-grid">
+      <button class="mode-btn active" onclick="setMode('individual')" id="btn-i">
+        <div class="mode-title">Check specific stocks</div>
+        <div class="mode-desc">Type in tickers you want to analyze</div>
+      </button>
+      <button class="mode-btn" onclick="setMode('sp500')" id="btn-s">
+        <div class="mode-title">Scan S&amp;P 500</div>
+        <div class="mode-desc">Auto-scan top large-cap names</div>
+      </button>
+    </div>
+  </div>
+
+  <div class="config">
+    <div class="field-label">Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
+    <input type="password" id="apiKey" placeholder="Paste your Finnhub key here…">
+
+    <div id="sec-i">
+      <div class="field-label">Tickers to analyze (comma separated)</div>
+      <textarea id="tickers">GOOGL, TSM, BKE, IRDM, PWP, ELTP</textarea>
+    </div>
+
+    <div id="sec-s" style="display:none">
+      <div class="field-label">Scan limit</div>
+      <input type="number" id="scanLimit" value="40" min="5" max="130">
+      <div style="font-size:10px;color:var(--mid);margin-top:-8px;margin-bottom:12px">Keep ≤50 on free tier · Full list has 130 names</div>
+    </div>
+
+    <div class="spec-row">
+      <div class="spec-pill">ROCE <span>≥15%</span></div>
+      <div class="spec-pill">D/E <span>&lt;0.8</span></div>
+      <div class="spec-pill">FCF <span>≥5%</span></div>
+      <div class="spec-pill">Mom <span>Top 20%</span></div>
+      <div class="spec-pill">Dip <span>10-20%</span></div>
+      <div class="spec-pill">RSI <span>&gt;40</span></div>
+    </div>
+  </div>
+
+  <button class="run-btn" id="runBtn" onclick="run()">▶  Run Screener</button>
+  <div class="progress" id="prog"><span id="progTxt">Starting…</span><div class="pbar-wrap"><div class="pbar" id="pbar"></div></div></div>
+  <div class="err" id="errBox"></div>
+  <div id="out"></div>
+
+</div>
+
+<script>
+const SPEC={roce:15,fcf:5,de:.8,momPct:80,dipMin:10,dipMax:20,smaProx:3,rsiPivot:40};
+const SP500=["AAPL","MSFT","NVDA","AMZN","GOOGL","META","BRK.B","AVGO","TSLA","LLY","JPM","V","XOM","UNH","MA","COST","HD","PG","NFLX","JNJ","ABBV","BAC","CRM","WMT","KO","MRK","CVX","AMD","PEP","ADBE","TMO","ACN","LIN","MCD","CSCO","ABT","WFC","DHR","GE","DIS","TXN","VZ","IBM","INTU","NOW","PM","CAT","AMGN","NEE","CMCSA","UBER","ISRG","SPGI","RTX","UNP","LOW","HON","QCOM","AMAT","BKNG","ETN","PFE","T","COP","SYK","BLK","PGR","SCHW","LMT","TJX","BSX","ELV","VRTX","ADP","MDT","CB","MU","GILD","PANW","MMC","ADI","SBUX","REGN","PLD","ANET","KLAC","CI","BX","SO","DE","LRCX","MO","ZTS","SHW","WM","DUK","FI","ICE","BMY","CL","EQIX","NOC","SLB","APH","MCK","TT","CME","PNC","AON","ITW","MSI","USB","GD","CMG","EOG","TGT","FCX","NKE","WELL","COF","ECL","EMR","HCA","ORLY","CSX","AJG","CDNS","PSA","MAR","MCO","ROP","CARR","SNPS"];
+
+let mode='individual', results=[];
+
+function setMode(m){
+  mode=m;
+  document.getElementById('btn-i').classList.toggle('active',m==='individual');
+  document.getElementById('btn-s').classList.toggle('active',m==='sp500');
+  document.getElementById('sec-i').style.display=m==='individual'?'block':'none';
+  document.getElementById('sec-s').style.display=m==='sp500'?'block':'none';
+}
+
+async function fh(path,key){
+  const r=await fetch(`https://finnhub.io/api/v1${path}&token=${key}`);
+  return r.json();
+}
+
+async function getHistory(sym){
+  try{
+    const end=Math.floor(Date.now()/1000),start=end-365*24*60*60;
+    const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&period1=${start}&period2=${end}`;
+    const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+    const d=await r.json();
+    const p=JSON.parse(d.contents);
+    const c=p?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
+    return Array.isArray(c)?c.filter(Boolean):null;
+  }catch{return null;}
+}
+
+function tech(cls){
+  if(!cls||cls.length<60)return null;
+  const n=cls.length;
+  const sma=(p,e)=>{if(e-p+1<0)return null;let s=0;for(let i=e-p+1;i<=e;i++)s+=cls[i];return s/p;};
+  const s200=sma(Math.min(200,n),n-1),s200p=n>220?sma(Math.min(200,n),n-21):null;
+  const s100=sma(Math.min(100,n),n-1),cur=cls[n-1];
+  const lk=cls.slice(Math.max(0,n-252)),h52=Math.max(...lk);
+  const draw=(h52-cur)/h52*100;
+  const i12=Math.max(0,n-1-252),i1=Math.max(0,n-1-21);
+  const mom=cls[i12]>0?(cls[i1]-cls[i12])/cls[i12]*100:null;
+  const rp=14,hs=cls.slice(-rp*4);
+  let g=0,l=0;
+  for(let i=1;i<=rp;i++){const d=hs[i]-hs[i-1];d>=0?g+=d:l-=d;}
+  let ag=g/rp,al=l/rp;
+  for(let i=rp+1;i<hs.length;i++){const d=hs[i]-hs[i-1];ag=(ag*(rp-1)+(d>=0?d:0))/rp;al=(al*(rp-1)+(d<0?-d:0))/rp;}
+  const rsi=al===0?100:100-100/(1+ag/al);
+  const ema=(d,p)=>{const k=2/(p+1);let v=d[0],o=[v];for(let i=1;i<d.length;i++){v=d[i]*k+v*(1-k);o.push(v);}return o;};
+  const e12=ema(cls,12),e26=ema(cls,26),ml=e12.map((v,i)=>v-e26[i]),sl=ema(ml,9);
+  const mh=ml[n-1]-sl[n-1],mhp=ml[n-2]-sl[n-2];
+  return{cur,s100,s200,h52,s200up:s200&&s200p?s200>s200p:null,
+    draw:+draw.toFixed(1),mom:mom!==null?+mom.toFixed(1):null,
+    rsi:+rsi.toFixed(1),rsiCross:rsi>=SPEC.rsiPivot,
+    macdH:+mh.toFixed(4),macdCross:mhp<0&&mh>=0,
+    nearS100:s100?Math.abs((cur-s100)/s100*100)<=SPEC.smaProx:false,
+    nearS200:s200?Math.abs((cur-s200)/s200*100)<=SPEC.smaProx:false};
+}
+
+function evalV(m){
+  const mt=m?.metric||{};
+  const r=mt.roeTTM||mt.roeRfy||null;
+  const f=mt.freeCashFlowPerShareTTM&&mt.lastClosePrice&&mt.lastClosePrice>0?mt.freeCashFlowPerShareTTM/mt.lastClosePrice*100:null;
+  const d=mt['totalDebt/totalEquityAnnual']||mt['totalDebt/totalEquityQuarterly']||null;
+  return{roce:r,fcf:f?+f.toFixed(1):null,de:d,pe:mt.peTTM||null,
+    pR:r!==null&&r>=SPEC.roce,pF:f!==null&&f>=SPEC.fcf,pD:d!==null&&d<SPEC.de,
+    get passed(){return this.pR||this.pF||this.pD;}};
+}
+
+function evalT(t){if(!t)return{passed:false,up:null,mom:null};return{up:t.s200up,mom:t.mom,passed:t.s200up===true};}
+function evalD(t){
+  if(!t)return{passed:false,draw:null};
+  const inR=t.draw>=SPEC.dipMin&&t.draw<=SPEC.dipMax,near=t.nearS100||t.nearS200;
+  return{draw:t.draw,inR,near,nearS100:t.nearS100,nearS200:t.nearS200,passed:inR&&near};
+}
+function evalP(t){
+  if(!t)return{passed:false,rsi:null,mh:null};
+  return{rsi:t.rsi,rsiCross:t.rsiCross,mh:t.macdH,macdCross:t.macdCross,passed:t.rsiCross||t.macdCross};
+}
+
+async function run(){
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key){err('Paste your Finnhub API key first.');return;}
+  let syms=[];
+  if(mode==='individual'){
+    syms=document.getElementById('tickers').value.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+    if(!syms.length){err('Enter at least one ticker.');return;}
+  } else {
+    const lim=parseInt(document.getElementById('scanLimit').value)||40;
+    syms=SP500.slice(0,Math.min(lim,SP500.length));
+  }
+  setRunning(true);clearErr();document.getElementById('out').innerHTML='';results=[];
+  for(let i=0;i<syms.length;i++){
+    const sym=syms[i];
+    prog(`Analyzing ${sym} (${i+1}/${syms.length})…`,(i/syms.length)*100);
+    try{
+      const [q,mt,pr]=await Promise.all([fh(`/quote?symbol=${sym}`,key),fh(`/stock/metric?symbol=${sym}&metric=all`,key),fh(`/stock/profile2?symbol=${sym}`,key)]);
+      const cl=await getHistory(sym);
+      if(!pr||!pr.ticker)continue;
+      const t=tech(cl),v=evalV(mt),tr=evalT(t),d=evalD(t),p=evalP(t);
+      results.push({sym,pr,q,v,tr,d,p,t,mom:t?.mom??null});
+    }catch(e){console.warn(sym,e);}
+    await sleep(600);
+  }
+  // Momentum ranking
+  const wm=[...results].filter(r=>r.mom!==null).sort((a,b)=>b.mom-a.mom);
+  const ci=Math.max(0,Math.ceil(wm.length*(1-SPEC.momPct/100))-1);
+  const mc=wm.length?wm[ci]?.mom:null;
+  results.forEach(r=>{
+    const top=mc!==null&&r.mom!==null&&r.mom>=mc;
+    r.tr.top=top;r.tr.passed=r.tr.passed&&top;
+    r.trigger=r.v.passed&&r.tr.passed&&r.d.passed&&r.p.passed;
+  });
+  results.sort((a,b)=>a.trigger===b.trigger?(b.mom||-999)-(a.mom||-999):a.trigger?-1:1);
+  setRunning(false);render();
+}
+
+function render(){
+  const trig=results.filter(r=>r.trigger);
+  const part=results.filter(r=>!r.trigger&&(r.v.passed||r.tr.passed||r.d.passed||r.p.passed));
+  const p1w =results.filter(r=>!r.v.passed&&(r.tr.passed||r.d.passed||r.p.passed));
+  let h=`<div class="stats"><span>Scanned: <strong>${results.length}</strong></span><span>Triggers: <strong style="color:var(--green)">${trig.length}</strong></span><span>Watching: <strong>${part.length}</strong></span></div>`;
+  if(trig.length){
+    h+=`<div class="sec-head" style="color:var(--green)">🎯 Full Triggers — All 4 Phases Passed</div>`;
+    trig.forEach(r=>{h+=card(r);});
+  } else {
+    h+=`<div class="no-trigger"><strong style="color:var(--mid);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase">No Full Triggers This Scan</strong><br><br>Market may be near highs (dip too shallow), or the pivot hasn't fired yet. Check the watchlist below — anything 1 phase away is worth tracking daily.</div>`;
+  }
+  if(part.length){h+=`<div class="sec-head" style="color:var(--gold);margin-top:16px">👀 Watchlist — Passed Some Phases</div>`;part.forEach(r=>{h+=card(r);});}
+  if(p1w.length){h+=`<div class="sec-head" style="color:var(--orange);margin-top:16px">📋 Phase 1 Watch — Good Technicals, Fundamentals Not Yet There</div>`;p1w.forEach(r=>{h+=card(r);});}
+  document.getElementById('out').innerHTML=h;
+}
+
+function card(r){
+  const{sym,pr,q,v,tr,d,p,trigger}=r;
+  const px=q?.c,chg=q?.dp;
+  const chgCls=chg>=0?'up':'dn',chgStr=chg!=null?`${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(2)}%`:'—';
+  const phases=[{l:'Value',pass:v.passed},{l:'Trend',pass:tr.passed},{l:'Dip',pass:d.passed},{l:'Pivot',pass:p.passed}];
+  const chips=phases.map(ph=>`<div class="chip ${ph.pass?'pass':'fail'}"><div class="chip-dot"></div>${ph.l}</div>`).join('');
+  const cmd=`Using my Robinhood Agentic account (connected via MCP at agent.robinhood.com/mcp/trading), please place a market order to BUY [SHARES] shares of ${sym} at market price. Show me a trade preview before confirming execution.`;
+  const mrow=(lbl,val,pass)=>`<div class="mrow"><div class="mlabel">${lbl}</div><div class="mval ${pass===null?'n':pass?'pass':'fail'}">${val}${pass===true?' ✓':pass===false?' ✗':''}</div></div>`;
+  return`<div class="card ${trigger?'trigger':''}" id="c-${sym}">
+  <div class="card-top" onclick="tog('${sym}')">
+    <div><div class="ticker">${sym}</div><div class="exch">${pr.exchange||'US'}</div></div>
+    <div><div class="co-name">${(pr.name||'').slice(0,26)}</div><div class="co-ind">${(pr.finnhubIndustry||'').slice(0,28)}</div></div>
+    <div class="price-col"><div class="price">${px?'$'+px.toFixed(2):'—'}</div><div class="chg ${chgCls}">${chgStr}</div></div>
+  </div>
+  <div class="chips">${chips}</div>
+  ${trigger?`<div class="trig-banner">◈ FULL TRIGGER — quality business · confirmed uptrend · healthy dip · pivot confirmed</div>`:''}
+  <div class="detail" id="d-${sym}">
+    <div>
+      <div class="dt">Phase 1 — Value</div>
+      ${mrow('ROCE/ROE',v.roce!=null?v.roce.toFixed(1)+'%':'—',v.pR)}
+      ${mrow('FCF Yield',v.fcf!=null?v.fcf+'%':'—',v.pF)}
+      ${mrow('D/E',v.de!=null?v.de.toFixed(2):'—',v.pD)}
+      ${mrow('P/E',v.pe!=null?v.pe.toFixed(1):'—',null)}
+      <div class="dt" style="margin-top:12px">Phase 3 — Dip</div>
+      ${mrow('Drawdown',d.draw!=null?'-'+d.draw+'%':'—',d.inR)}
+      ${mrow('In 10-20% range',d.inR?'Yes':'No',d.inR)}
+      ${mrow('Near SMA floor',d.near?'Yes':'No',d.near)}
+    </div>
+    <div>
+      <div class="dt">Phase 2 — Trend</div>
+      ${mrow('12-1mo Momentum',r.mom!=null?(r.mom>=0?'+':'')+r.mom+'%':'—',tr.top)}
+      ${mrow('200D SMA Slope',tr.up===null?'—':tr.up?'Rising ↑':'Flat ↓',tr.up)}
+      <div class="dt" style="margin-top:12px">Phase 4 — Pivot</div>
+      ${mrow('RSI-14',p.rsi!=null?p.rsi:'—',p.rsiCross)}
+      ${mrow('RSI crossed >40',p.rsiCross?'Yes':'No',p.rsiCross)}
+      ${mrow('MACD turned +',p.macdCross?'Yes':'No',p.macdCross)}
+      ${trigger?`<div class="rh-wrap"><div class="rh-box" onclick="cp('${sym}',\`${cmd.replace(/`/g,'\\`')}\`)"><div class="rh-lbl">Copy trade command → Claude Desktop</div>${cmd.slice(0,90)}…<div class="toast" id="t-${sym}">Copied!</div></div></div>`:''}
+    </div>
+  </div>
+</div>`;
+}
+
+function tog(sym){document.getElementById('d-'+sym).classList.toggle('open');}
+function cp(sym,cmd){navigator.clipboard.writeText(cmd).then(()=>{const t=document.getElementById('t-'+sym);t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2000);});}
+function setRunning(on){
+  const b=document.getElementById('runBtn');
+  b.disabled=on;b.textContent=on?'⟳  Scanning…':'▶  Run Screener';
+  document.getElementById('prog').classList.toggle('on',on);
+  if(!on)document.getElementById('pbar').style.width='100%';
+}
+function prog(txt,pct){document.getElementById('progTxt').textContent=txt;document.getElementById('pbar').style.width=pct+'%';}
+function err(msg){const e=document.getElementById('errBox');e.textContent=msg;e.classList.add('on');}
+function clearErr(){document.getElementById('errBox').classList.remove('on');}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+</script>
+</body>
+</html>
