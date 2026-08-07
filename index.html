@@ -481,6 +481,7 @@ async function run(){
     syms=SP500.slice(0,Math.min(lim,SP500.length));
   }
   setRunning(true);clearErr();document.getElementById('out').innerHTML='';results=[];
+  loadTapeAndEtfs(); // load ETF tape now that we have the key
   for(let i=0;i<syms.length;i++){
     const sym=syms[i];
     prog(`Analyzing ${sym} (${i+1}/${syms.length})…`,(i/syms.length)*100);
@@ -733,7 +734,10 @@ function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 // ══════════════════════════════════════════════════════════════
 window.addEventListener('load',()=>{
   load();
-  loadTapeAndEtfs();
+  // Tape and ETFs load when Run Screener is clicked — not on page open
+  // (no key available yet on first load)
+  document.getElementById('tape').innerHTML='<div class="tape-item"><span class="tape-sym" style="color:var(--dim);font-weight:400">Market data loads when you run the screener</span></div>';
+  document.getElementById('etfBar').innerHTML='<div style="font-size:10px;color:var(--dim);font-family:var(--mono);padding:4px 0">Run screener to load ETF market health →</div>';
 });
 </script>
 </body>
