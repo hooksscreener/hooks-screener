@@ -8,72 +8,98 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ── Miami Vice palette ── */
 :root{
-  --bg:#05070a;--panel:#090d12;--card:#0c1018;--border:#151d28;--borderhi:#1e2d40;
-  --gold:#e8c87a;--golddim:#2a2010;--cyan:#5ec4d6;--cyandim:#0a1e24;
-  --green:#4dba87;--greendim:#0a1f14;--red:#c95f6a;--reddim:#1f0a0d;
-  --orange:#e8924a;--text:#d6dfe8;--mid:#647d96;--dim:#2d3f52;
-  --mono:'IBM Plex Mono',monospace;--ui:'DM Sans',sans-serif;
+  --bg:#05050a;
+  --panel:#09090f;
+  --card:#0d0d14;
+  --border:#1a1a2e;
+  --borderhi:#2a2a44;
+  --pink:#FF6EC7;
+  --pinkdim:#2d0a1e;
+  --blue:#00B4FF;
+  --bluedim:#001e33;
+  --green:#4dba87;
+  --greendim:#0a1f14;
+  --red:#c95f6a;
+  --reddim:#1f0a0d;
+  --orange:#e8924a;
+  --text:#e8e8f0;
+  --mid:#7070a0;
+  --dim:#2d2d50;
+  --mono:'IBM Plex Mono',monospace;
+  --ui:'DM Sans',sans-serif;
 }
+
 body{background:var(--bg);color:var(--text);font-family:var(--ui);min-height:100vh}
 
 /* ── Ticker tape ── */
-.tape-wrap{background:#060a0e;border-bottom:1px solid var(--border);overflow:hidden;height:34px;display:flex;align-items:center}
+.tape-wrap{background:#050509;border-bottom:1px solid var(--border);overflow:hidden;height:34px;display:flex;align-items:center}
 .tape-track{display:flex;gap:0;animation:scroll 40s linear infinite;white-space:nowrap}
 .tape-track:hover{animation-play-state:paused}
 .tape-item{display:flex;align-items:center;gap:6px;padding:0 20px;border-right:1px solid var(--border);font-family:var(--mono);font-size:11px}
-.tape-sym{color:var(--gold);font-weight:700}
+.tape-sym{color:var(--pink);font-weight:700}
 .tape-px{color:var(--text)}
 .tape-chg.up{color:var(--green)}.tape-chg.dn{color:var(--red)}
 @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
 
 /* ── Header ── */
 .header{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 20px 12px;position:sticky;top:0;z-index:100}
-.header-inner{max-width:860px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
-.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:3px}
+.header-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--pink);text-transform:uppercase;margin-bottom:3px}
 .title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.5px}
 .header-tabs{display:flex;gap:4px}
 .tab-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--mid);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s}
-.tab-btn.active{background:var(--golddim);border-color:var(--gold);color:var(--gold)}
+.tab-btn.active{background:var(--pinkdim);border-color:var(--pink);color:var(--pink)}
 
-/* ── Main ── */
-.main{padding:16px;max-width:860px;margin:0 auto}
+/* ── Layout ── */
+.main{padding:16px;max-width:1000px;margin:0 auto}
 .tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── Screener layout: main + sidebar ── */
+.screener-layout{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start}
+.screener-left{min-width:0}
+.screener-sidebar{position:sticky;top:70px}
+
+/* ── Sidebar watchlist (during scan) ── */
+.sidebar-wl{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+.sidebar-wl-head{font-family:var(--mono);font-size:9px;letter-spacing:3px;color:var(--pink);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.sidebar-wl-badge{background:var(--pinkdim);color:var(--pink);border-radius:20px;padding:1px 7px;font-size:8px}
+.sidebar-wl-item{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 11px;margin-bottom:7px}
+.sidebar-wl-sym{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--pink);margin-bottom:3px}
+.sidebar-wl-name{font-size:10px;color:var(--mid);margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar-wl-chips{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px}
+.sidebar-wl-prox{font-family:var(--mono);font-size:9px;color:var(--blue);line-height:1.4}
+.sidebar-wl-empty{font-size:11px;color:var(--dim);text-align:center;padding:16px 0}
 
 /* ── Form elements ── */
 .field-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:6px;display:flex;align-items:center;gap:8px}
-.field-label a{color:var(--cyan);text-decoration:none;font-size:8px}
+.field-label a{color:var(--blue);text-decoration:none;font-size:8px}
 input,textarea{width:100%;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;margin-bottom:12px;transition:border-color .15s}
-input:focus,textarea:focus{border-color:var(--gold)}
+input:focus,textarea:focus{border-color:var(--pink)}
 textarea{resize:vertical;min-height:56px}
 
 /* ── Mode buttons ── */
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
 .mode-btn{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px 13px;cursor:pointer;text-align:left;transition:all .15s;color:var(--mid);width:100%}
-.mode-btn.active{background:var(--golddim);border-color:var(--gold);color:var(--gold)}
+.mode-btn.active{background:var(--pinkdim);border-color:var(--pink);color:var(--pink)}
 .mode-title{font-size:12px;font-weight:600;margin-bottom:2px}
 .mode-desc{font-size:10px;opacity:.7;line-height:1.4}
 
-/* ── Config panel ── */
+/* ── Config ── */
 .config{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px}
-.spec-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
-.spec-pill{font-family:var(--mono);font-size:9px;color:var(--mid);display:flex;gap:3px}
-.spec-pill span{color:var(--gold);font-weight:700}
-
-/* ── SMS alert config ── */
-.sms-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sms-note{font-size:10px;color:var(--dim);margin-top:-8px;margin-bottom:12px;line-height:1.5}
 
 /* ── Run button ── */
-.run-btn{width:100%;padding:13px;background:var(--golddim);border:2px solid var(--gold);border-radius:8px;color:var(--gold);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;margin-bottom:16px;transition:all .2s}
-.run-btn:hover{background:var(--gold);color:var(--bg)}
+.run-btn{width:100%;padding:13px;background:var(--pinkdim);border:2px solid var(--pink);border-radius:8px;color:var(--pink);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;cursor:pointer;margin-bottom:16px;transition:all .2s}
+.run-btn:hover{background:var(--pink);color:var(--bg)}
 .run-btn:disabled{opacity:.4;cursor:not-allowed}
 
 /* ── Progress ── */
-.progress{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--cyan);display:none}
+.progress{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:14px;font-family:var(--mono);font-size:11px;color:var(--blue);display:none}
 .progress.on{display:block}
 .pbar-wrap{background:var(--border);border-radius:4px;height:3px;margin-top:8px;overflow:hidden}
-.pbar{height:100%;background:var(--cyan);border-radius:4px;width:0;transition:width .3s}
+.pbar{height:100%;background:linear-gradient(90deg,var(--pink),var(--blue));border-radius:4px;width:0;transition:width .3s}
 
 /* ── Error ── */
 .err{background:var(--reddim);border:1px solid rgba(201,95,106,.4);border-radius:8px;padding:12px 14px;color:var(--red);font-family:var(--mono);font-size:11px;margin-bottom:14px;display:none}
@@ -84,23 +110,76 @@ textarea{resize:vertical;min-height:56px}
 .stats strong{color:var(--text)}
 .sec-head{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;margin-top:4px}
 
+/* ── ETF section ── */
+.etf-section{margin-bottom:16px}
+.etf-controls{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+.etf-range-btn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:var(--mono);font-size:9px;padding:3px 7px;cursor:pointer;transition:all .15s}
+.etf-range-btn.active{background:var(--bluedim);border-color:var(--blue);color:var(--blue)}
+.etf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:7px}
+.etf-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 10px;text-align:center;cursor:pointer;transition:border-color .15s}
+.etf-card:hover{border-color:var(--blue)}
+.etf-sym{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--pink);margin-bottom:2px}
+.etf-px{font-family:var(--mono);font-size:10px;color:var(--text)}
+.etf-chg{font-family:var(--mono);font-size:9px;margin-bottom:4px}
+.etf-sparkline{width:100%;height:28px;margin-bottom:4px}
+.etf-trend{font-size:8px;padding:1px 5px;border-radius:8px;font-family:var(--mono)}
+.etf-trend.up{background:rgba(77,186,135,.15);color:var(--green);border:1px solid rgba(77,186,135,.3)}
+.etf-trend.dn{background:rgba(201,95,106,.12);color:var(--red);border:1px solid rgba(201,95,106,.25)}
+.etf-trend.na{background:rgba(100,100,160,.1);color:var(--mid);border:1px solid rgba(100,100,160,.2)}
+
 /* ── Stock card ── */
 .card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color .2s}
-.card.trigger{border-color:rgba(77,186,135,.5)}
-.card-top{display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;padding:11px 14px;cursor:pointer}
-.ticker{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--gold);line-height:1.1}
+.card.trigger{border-color:rgba(77,186,135,.5);box-shadow:0 0 0 1px rgba(77,186,135,.15)}
+
+/* Card top — matches whiteboard: ticker left, name center, price+beta right */
+.card-top{padding:11px 14px;cursor:pointer}
+.card-row1{display:grid;grid-template-columns:72px 1fr auto;gap:10px;align-items:start;margin-bottom:6px}
+.card-row2{display:flex;align-items:center;justify-content:space-between}
+
+.ticker{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--pink);line-height:1.1}
 .exch{font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
 .co-name{font-size:12px;color:var(--text);margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .co-ind{font-size:9px;color:var(--mid)}
-.price-col{text-align:right}
+
+/* Price column */
+.price-col{text-align:right;white-space:nowrap}
 .price{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--text)}
 .chg{font-family:var(--mono);font-size:10px}
 .chg.up{color:var(--green)}.chg.dn{color:var(--red)}
-.chips{display:flex;gap:5px;flex-wrap:wrap;padding:0 14px 11px}
+
+/* Beta + RS row */
+.beta-rs{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.beta-wrap{display:flex;align-items:center;gap:4px;position:relative}
+.beta-label{font-family:var(--mono);font-size:9px;color:var(--mid)}
+.beta-val{font-family:var(--mono);font-size:11px;font-weight:700}
+.beta-val.low{color:var(--green)}
+.beta-val.mid{color:var(--orange)}
+.beta-val.high{color:var(--red)}
+.beta-drop-btn{background:none;border:none;cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--mid);padding:0 2px}
+.beta-dropdown{position:absolute;top:100%;left:0;background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:6px 0;min-width:160px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none}
+.beta-dropdown.open{display:block}
+.beta-dd-section{font-family:var(--mono);font-size:7px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding:6px 12px 3px}
+.beta-dd-item{font-family:var(--mono);font-size:10px;padding:5px 12px;cursor:pointer;color:var(--mid);transition:background .1s;display:flex;align-items:center;gap:6px}
+.beta-dd-item:hover{background:var(--card);color:var(--text)}
+.beta-dd-item.selected{color:var(--blue)}
+.beta-dd-item.broad{font-weight:700;color:var(--text)}
+.beta-dd-item.sector{text-decoration:underline;color:var(--pink)}
+
+.rs-wrap{display:flex;align-items:center;gap:3px}
+.rs-label{font-family:var(--mono);font-size:9px;color:var(--mid)}
+.rs-val{font-family:var(--mono);font-size:11px;font-weight:700}
+.rs-val.pos{color:var(--green)}.rs-val.neg{color:var(--red)}
+
+/* Phase chips row */
+.chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .chip{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-family:var(--mono);font-size:9px;letter-spacing:.5px}
 .chip.pass{background:rgba(77,186,135,.15);border:1px solid rgba(77,186,135,.3);color:var(--green)}
 .chip.fail{background:rgba(201,95,106,.12);border:1px solid rgba(201,95,106,.25);color:var(--red)}
 .chip-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.add-wl-btn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:9px;padding:3px 8px;cursor:pointer;font-family:var(--mono);margin-left:auto}
+.add-wl-btn:hover{border-color:var(--blue);color:var(--blue)}
+.add-wl-btn.watching{border-color:var(--pink);color:var(--pink)}
+
 .trig-banner{background:var(--greendim);border-top:1px solid rgba(77,186,135,.3);padding:7px 14px;font-family:var(--mono);font-size:10px;color:var(--green);letter-spacing:1px}
 .detail{border-top:1px solid var(--border);padding:14px;display:none;grid-template-columns:1fr 1fr;gap:16px}
 .detail.open{display:grid}
@@ -110,52 +189,65 @@ textarea{resize:vertical;min-height:56px}
 .mval{font-family:var(--mono);font-size:11px;font-weight:600}
 .mval.pass{color:var(--green)}.mval.fail{color:var(--red)}.mval.n{color:var(--text)}
 .rh-box{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:var(--mono);font-size:9px;color:var(--mid);line-height:1.5;cursor:pointer;transition:border-color .15s;position:relative;margin-top:10px}
-.rh-box:hover{border-color:var(--gold)}
-.rh-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:4px}
+.rh-box:hover{border-color:var(--pink)}
+.rh-lbl{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--pink);margin-bottom:4px}
 .toast{position:absolute;top:8px;right:8px;background:var(--green);color:var(--bg);font-size:9px;padding:2px 6px;border-radius:4px;opacity:0;transition:opacity .2s}
 .toast.on{opacity:1}
 .no-trig{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:11px;color:var(--mid);line-height:1.6}
 
-/* ── Watchlist panel ── */
+/* ── Full watchlist tab ── */
 .wl-card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;padding:12px 14px}
 .wl-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.wl-sym{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--gold)}
+.wl-sym{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--pink)}
 .wl-name{font-size:11px;color:var(--mid);margin-bottom:8px}
 .wl-phases{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
-.wl-proximity{font-family:var(--mono);font-size:10px;color:var(--cyan);margin-top:4px}
+.wl-proximity{font-family:var(--mono);font-size:10px;color:var(--blue);margin-top:4px}
 .wl-remove{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:10px;padding:3px 8px;cursor:pointer}
 .wl-remove:hover{border-color:var(--red);color:var(--red)}
-.add-wl-btn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:9px;padding:3px 8px;cursor:pointer;font-family:var(--mono);margin-left:6px}
-.add-wl-btn:hover{border-color:var(--cyan);color:var(--cyan)}
 .wl-add-row{display:flex;gap:8px;margin-bottom:14px}
 .wl-add-row input{margin-bottom:0}
-.wl-add-btn{background:var(--golddim);border:1px solid var(--gold);border-radius:6px;color:var(--gold);font-family:var(--mono);font-size:11px;padding:0 14px;cursor:pointer;white-space:nowrap}
+.wl-add-btn{background:var(--pinkdim);border:1px solid var(--pink);border-radius:6px;color:var(--pink);font-family:var(--mono);font-size:11px;padding:0 14px;cursor:pointer;white-space:nowrap}
 .wl-empty{text-align:center;padding:40px 20px;color:var(--dim);font-size:12px}
 
-/* ── ETF health bar ── */
-.etf-bar{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:16px}
-.etf-card{background:var(--card);border:1px solid var(--border);border-radius:7px;padding:9px 10px;text-align:center}
-.etf-sym{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--gold);margin-bottom:2px}
-.etf-px{font-family:var(--mono);font-size:11px;color:var(--text)}
-.etf-chg{font-family:var(--mono);font-size:10px;margin-bottom:4px}
-.etf-trend{font-size:9px;padding:2px 6px;border-radius:10px;font-family:var(--mono)}
-.etf-trend.up{background:rgba(77,186,135,.15);color:var(--green);border:1px solid rgba(77,186,135,.3)}
-.etf-trend.dn{background:rgba(201,95,106,.12);color:var(--red);border:1px solid rgba(201,95,106,.25)}
-.etf-trend.na{background:rgba(100,125,150,.1);color:var(--mid);border:1px solid rgba(100,125,150,.2)}
-
-/* ── SMS section ── */
+/* ── SMS / settings ── */
+.sms-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sms-note{font-size:10px;color:var(--dim);margin-top:-8px;margin-bottom:12px;line-height:1.5}
 .sms-status{font-family:var(--mono);font-size:10px;padding:8px 12px;border-radius:6px;margin-bottom:10px;display:none}
 .sms-status.ok{background:var(--greendim);color:var(--green);border:1px solid rgba(77,186,135,.3);display:block}
 .sms-status.er{background:var(--reddim);color:var(--red);border:1px solid rgba(201,95,106,.3);display:block}
 
-@media(max-width:600px){
+/* ── Info page ── */
+.info-hero{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:24px 20px;margin-bottom:20px;border-top:2px solid var(--pink)}
+.info-hero-eye{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--pink);text-transform:uppercase;margin-bottom:8px}
+.info-hero-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:10px;letter-spacing:-0.5px}
+.info-hero-sub{font-size:13px;color:var(--mid);line-height:1.7}
+.info-section{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px;margin-bottom:12px}
+.info-section-title{font-family:var(--mono);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--pink);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.info-body{font-size:13px;color:var(--text);line-height:1.8;margin-bottom:10px}
+.info-body:last-child{margin-bottom:0}
+.info-callout{background:var(--panel);border-left:3px solid var(--blue);border-radius:0 6px 6px 0;padding:12px 16px;margin:14px 0;font-size:12px;color:var(--mid);line-height:1.7;font-style:italic}
+.phase-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.phase-card{background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:12px 14px;border-top:2px solid var(--blue)}
+.phase-num{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase;margin-bottom:4px}
+.phase-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
+.phase-desc{font-size:11px;color:var(--mid);line-height:1.6}
+.info-rule-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+.info-rule-row:last-child{border-bottom:none}
+.info-rule-label{color:var(--mid);min-width:120px}
+.info-rule-val{color:var(--text);text-align:right;flex:1;padding-left:12px;line-height:1.5}
+
+/* ── Mobile ── */
+@media(max-width:700px){
+  .screener-layout{grid-template-columns:1fr}
+  .screener-sidebar{display:none}
   .header-inner{flex-direction:column;gap:8px;align-items:flex-start}
-  .card-top{grid-template-columns:54px 1fr auto;gap:8px}
+  .card-row1{grid-template-columns:52px 1fr auto;gap:8px}
   .ticker{font-size:13px}
   .detail{grid-template-columns:1fr}
   .main{padding:12px}
   .sms-row{grid-template-columns:1fr}
-  .etf-bar{grid-template-columns:repeat(3,1fr)}
+  .etf-grid{grid-template-columns:repeat(3,1fr)}
+  .phase-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -164,7 +256,7 @@ textarea{resize:vertical;min-height:56px}
 <!-- Ticker tape -->
 <div class="tape-wrap">
   <div class="tape-track" id="tape">
-    <div class="tape-item"><span class="tape-sym">Loading…</span></div>
+    <div class="tape-item"><span class="tape-sym" style="color:var(--mid);font-weight:400">Market data loads when you run the screener</span></div>
   </div>
 </div>
 
@@ -172,13 +264,14 @@ textarea{resize:vertical;min-height:56px}
 <div class="header">
   <div class="header-inner">
     <div>
-      <div class="eyebrow">◈ Hooks Screener · v0.2</div>
+      <div class="eyebrow">◈ Hooks Screener · v0.3</div>
       <div class="title">Quality · Momentum · Edge</div>
     </div>
     <div class="header-tabs">
-      <button class="tab-btn active" onclick="switchTab('screener')">Screener</button>
-      <button class="tab-btn" onclick="switchTab('watchlist')">Watchlist</button>
-      <button class="tab-btn" onclick="switchTab('settings')">Settings</button>
+      <button class="tab-btn active" onclick="switchTab('screener',this)">Screener</button>
+      <button class="tab-btn" onclick="switchTab('watchlist',this)">Watchlist</button>
+      <button class="tab-btn" onclick="switchTab('info',this)">Info</button>
+      <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
     </div>
   </div>
 </div>
@@ -188,64 +281,77 @@ textarea{resize:vertical;min-height:56px}
   <!-- ══ SCREENER TAB ══ -->
   <div class="tab-panel active" id="tab-screener">
 
-    <!-- ETF health -->
-    <div class="sec-head" style="color:var(--mid)">Market Health</div>
-    <div class="etf-bar" id="etfBar">
-      <div class="etf-card"><div class="etf-sym">—</div><div class="etf-px">Loading</div></div>
-    </div>
-
-    <!-- Mode -->
-    <div class="field-label">What do you want to scan?</div>
-    <div class="mode-grid">
-      <button class="mode-btn active" onclick="setMode('individual')" id="btn-i">
-        <div class="mode-title">Specific stocks</div>
-        <div class="mode-desc">Type in tickers to analyze</div>
-      </button>
-      <button class="mode-btn" onclick="setMode('sp500')" id="btn-s">
-        <div class="mode-title">S&amp;P 500 auto-scan</div>
-        <div class="mode-desc">Scans top large-cap names automatically</div>
-      </button>
-    </div>
-
-    <!-- Config -->
-    <div class="config">
-      <div class="field-label">Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
-      <input type="password" id="apiKey" placeholder="Paste your Finnhub key…" oninput="saveKey()">
-
-      <div id="sec-i">
-        <div class="field-label">Tickers (comma separated — leave blank to auto-scan S&amp;P 500)</div>
-        <textarea id="tickers">GOOGL, TSM, BKE, IRDM, PWP, ELTP</textarea>
+    <!-- ETF Market Health -->
+    <div class="etf-section">
+      <div class="etf-controls">
+        <span style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--mid);text-transform:uppercase;margin-right:4px">Market Health</span>
+        <button class="etf-range-btn active" onclick="setEtfRange('1D',this)">1D</button>
+        <button class="etf-range-btn" onclick="setEtfRange('1W',this)">1W</button>
+        <button class="etf-range-btn" onclick="setEtfRange('1M',this)">1M</button>
+        <button class="etf-range-btn" onclick="setEtfRange('3M',this)">3M</button>
+        <button class="etf-range-btn" onclick="setEtfRange('YTD',this)">YTD</button>
+        <button class="etf-range-btn" onclick="setEtfRange('1Y',this)">1Y</button>
+        <button class="etf-range-btn" onclick="setEtfRange('3Y',this)">3Y</button>
       </div>
-
-      <div id="sec-s" style="display:none">
-        <div class="field-label">Scan limit</div>
-        <input type="number" id="scanLimit" value="40" min="5" max="130">
-        <div style="font-size:10px;color:var(--mid);margin-top:-8px;margin-bottom:12px">Keep ≤50 on free tier · Full list has 130 names</div>
-      </div>
-
-      <div class="spec-row">
-        <div class="spec-pill">ROCE <span>≥15%</span></div>
-        <div class="spec-pill">D/E <span>&lt;0.8</span></div>
-        <div class="spec-pill">FCF <span>≥5%</span></div>
-        <div class="spec-pill">Mom <span>Top 20%</span></div>
-        <div class="spec-pill">Dip <span>10-20%</span></div>
-        <div class="spec-pill">RSI <span>&gt;40</span></div>
+      <div class="etf-grid" id="etfGrid">
+        <div class="etf-card" style="grid-column:1/-1;text-align:center;padding:14px 0;font-size:10px;color:var(--dim);font-family:var(--mono)">Run screener to load ETF market health →</div>
       </div>
     </div>
 
-    <button class="run-btn" id="runBtn" onclick="run()">▶  Run Screener</button>
-    <div class="progress" id="prog"><span id="progTxt">Starting…</span><div class="pbar-wrap"><div class="pbar" id="pbar"></div></div></div>
-    <div class="err" id="errBox"></div>
-    <div id="out"></div>
+    <!-- Screener layout: results + sidebar -->
+    <div class="screener-layout">
+      <div class="screener-left">
+
+        <!-- Mode -->
+        <div class="field-label">What do you want to scan?</div>
+        <div class="mode-grid">
+          <button class="mode-btn active" onclick="setMode('individual')" id="btn-i">
+            <div class="mode-title">Specific stocks</div>
+            <div class="mode-desc">Type in tickers to analyze</div>
+          </button>
+          <button class="mode-btn" onclick="setMode('sp500')" id="btn-s">
+            <div class="mode-title">S&amp;P 500 auto-scan</div>
+            <div class="mode-desc">Scans top large-cap names automatically</div>
+          </button>
+        </div>
+
+        <div class="config">
+          <div class="field-label">Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
+          <input type="password" id="apiKey" placeholder="Paste your Finnhub key…" oninput="saveKey()">
+          <div id="sec-i">
+            <div class="field-label">Tickers (comma separated — leave blank to auto-scan S&amp;P 500)</div>
+            <textarea id="tickers">GOOGL, TSM, BKE, IRDM, PWP, ELTP</textarea>
+          </div>
+          <div id="sec-s" style="display:none">
+            <div class="field-label">Scan limit</div>
+            <input type="number" id="scanLimit" value="40" min="5" max="130">
+            <div style="font-size:10px;color:var(--mid);margin-top:-8px;margin-bottom:12px">Keep ≤50 on free tier · Full S&P 500 has 130 names</div>
+          </div>
+        </div>
+
+        <button class="run-btn" id="runBtn" onclick="run()">▶  Run Screener</button>
+        <div class="progress" id="prog"><span id="progTxt">Starting…</span><div class="pbar-wrap"><div class="pbar" id="pbar"></div></div></div>
+        <div class="err" id="errBox"></div>
+        <div id="out"></div>
+      </div>
+
+      <!-- Sidebar watchlist (always visible during scan) -->
+      <div class="screener-sidebar">
+        <div class="sidebar-wl">
+          <div class="sidebar-wl-head">
+            ★ Watchlist
+            <span class="sidebar-wl-badge" id="wlCount">0</span>
+          </div>
+          <div id="sidebarWl"><div class="sidebar-wl-empty">Run screener to see proximity alerts for your watchlist</div></div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ══ WATCHLIST TAB ══ -->
   <div class="tab-panel" id="tab-watchlist">
-    <div class="sec-head" style="color:var(--gold);margin-bottom:14px">★ My Watchlist</div>
-    <div style="font-size:11px;color:var(--mid);margin-bottom:14px;line-height:1.6">
-      Add stocks you're tracking. Run the screener first, then click "Watch" on any card.
-      Each time you open the screener, this shows how close each stock is to a full trigger.
-    </div>
+    <div class="sec-head" style="color:var(--pink);margin-bottom:14px">★ My Watchlist</div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:14px;line-height:1.6">Add stocks to track. Run the screener first, then click ★ Watch on any card. Each stock shows how close it is to a full trigger.</div>
     <div class="wl-add-row">
       <input type="text" id="wlInput" placeholder="Add ticker manually (e.g. GOOGL)" style="margin-bottom:0">
       <button class="wl-add-btn" onclick="addToWatchlist(document.getElementById('wlInput').value)">+ Add</button>
@@ -253,59 +359,81 @@ textarea{resize:vertical;min-height:56px}
     <div id="wlPanel"></div>
   </div>
 
+  <!-- ══ INFO TAB ══ -->
+  <div class="tab-panel" id="tab-info">
+    <div class="info-hero">
+      <div class="info-hero-eye">◈ About This Screener</div>
+      <div class="info-hero-title">Quality · Momentum · Edge</div>
+      <div class="info-hero-sub">This screener was built around one idea: finding great businesses at the right price, at the right time. It doesn't just ask whether a stock looks good today. It asks whether the business is fundamentally strong, whether the market is starting to recognize that strength, whether the stock is currently offering a real discount, and whether the selling pressure has clearly stopped. All four questions have to be answered at the same time before the screener signals a buy.</div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">The Core Idea</div>
+      <div class="info-body">Fundamentals tell you <em>why</em> a stock deserves a position. Momentum tells you <em>when</em> to actually buy it. Most investors focus on one or the other. This system requires both.</div>
+      <div class="info-callout">"Is this a great business, in a real uptrend, currently on sale — and has the selling pressure just stopped?" That is the question this screener is designed to answer.</div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">The Four Phases</div>
+      <div class="info-body">Each stock must clear all four phases simultaneously to generate a signal.</div>
+      <div class="phase-grid">
+        <div class="phase-card"><div class="phase-num">Phase 1</div><div class="phase-name">Value — Is This a Good Business?</div><div class="phase-desc">Inspired by Warren Buffett's approach to value investing. This phase only looks at the quality of the company itself — how efficiently it generates profit from the money invested in it, how much real cash it produces, and how much debt it carries. A stock can't pass the later phases without clearing this one first.</div></div>
+        <div class="phase-card"><div class="phase-num">Phase 2</div><div class="phase-name">Trend — Is the Market Agreeing?</div><div class="phase-desc">A great business can stay flat for years if the market hasn't recognized it yet. This phase looks at price behavior — specifically whether the stock has shown sustained strength over the past year and whether its long-term average price is continuing to rise. Both have to be true.</div></div>
+        <div class="phase-card"><div class="phase-num">Phase 3</div><div class="phase-name">Dip — Is It Currently on Sale?</div><div class="phase-desc">Once a business is confirmed as high quality and in a real uptrend, this phase asks whether it has pulled back recently. The goal is to find a better entry point than chasing the stock near its highs. A pullback that is too shallow may not offer much of a discount. A pullback that is too deep may mean something is actually wrong. The focus is on the healthy middle ground.</div></div>
+        <div class="phase-card"><div class="phase-num">Phase 4</div><div class="phase-name">Pivot — Has the Selling Stopped?</div><div class="phase-desc">A stock can pass the first three phases and just sit there indefinitely. Phase 4 is the actual buy signal. It looks for the moment when selling pressure has clearly exhausted itself and buyers are beginning to step back in. Two independent momentum indicators are used so that a real pivot is confirmed rather than just noise in one signal.</div></div>
+      </div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">Key Concepts Explained Simply</div>
+      <div class="info-body" style="font-weight:600;color:var(--pink);margin-bottom:4px">Return on Capital</div>
+      <div class="info-body">Measures how efficiently a company turns the money invested in it into profit. Think of it as the business's batting average — how much does it generate for every dollar it's given to work with? A company that can consistently generate strong returns on its capital is one that compounds value over time.</div>
+      <div class="info-body" style="font-weight:600;color:var(--pink);margin-bottom:4px;margin-top:12px">Free Cash Flow</div>
+      <div class="info-body">The cash left over after a business pays for everything it needs to keep running and growing. Free cash flow is harder to manipulate than reported earnings because cash is real. A company that generates strong free cash flow relative to its market value is genuinely producing cash, not just reporting accounting profits.</div>
+      <div class="info-body" style="font-weight:600;color:var(--pink);margin-bottom:4px;margin-top:12px">Debt Level</div>
+      <div class="info-body">Debt amplifies both gains and losses. A company with manageable debt can survive a difficult year without being forced into damaging decisions. Too much debt turns an ordinary business downturn into a serious problem. This screener looks for companies that use debt responsibly rather than depending on it.</div>
+      <div class="info-body" style="font-weight:600;color:var(--pink);margin-bottom:4px;margin-top:12px">Momentum</div>
+      <div class="info-body">Price momentum reflects the market's collective recognition of a business's strength. Markets don't price information instantly. A stock with sustained price strength over the past year is one where recognition is building. Combining that with strong fundamentals gives you a stock where business quality and market recognition are starting to align.</div>
+      <div class="info-body" style="font-weight:600;color:var(--pink);margin-bottom:4px;margin-top:12px">The Dip and the Pivot</div>
+      <div class="info-body">Even in a strong uptrend, stocks pull back. The dip phase identifies when a stock has pulled back into a range that historically represents a healthy pause rather than a trend reversal. The pivot phase confirms the pullback is over — that selling has exhausted itself and buyers are returning. Buying into a dip without a confirmed pivot is catching a falling knife. Waiting for the pivot is what makes the entry disciplined rather than speculative.</div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">Portfolio Philosophy</div>
+      <div class="info-rule-row"><div class="info-rule-label">Concentration</div><div class="info-rule-val">15–20 positions. Concentrated enough that each pick matters. Diversified enough to survive any single mistake.</div></div>
+      <div class="info-rule-row"><div class="info-rule-label">Review cadence</div><div class="info-rule-val">Quarterly, timed around earnings season — when fundamentals actually update.</div></div>
+      <div class="info-rule-row"><div class="info-rule-label">Holding period</div><div class="info-rule-val">8–24 months. Long enough for a thesis to play out. Short enough to stay disciplined.</div></div>
+      <div class="info-rule-row"><div class="info-rule-label">When to sell</div><div class="info-rule-val">Three explicit triggers defined in advance — fundamental quality deteriorates, debt rises to a concerning level, or the long-term price trend breaks. Defined in advance so emotion doesn't make the decision.</div></div>
+    </div>
+    <div class="info-section">
+      <div class="info-section-title">What This Is Not</div>
+      <div class="info-body">This screener is not a prediction system. It does not guarantee a stock will go up. It is a disciplined framework for identifying businesses worth owning, at moments when the market is offering a reasonable entry point.</div>
+      <div class="info-callout">For informational and research purposes only. Not financial advice. Always conduct your own research before making any investment decision.</div>
+    </div>
+  </div>
+
   <!-- ══ SETTINGS TAB ══ -->
   <div class="tab-panel" id="tab-settings">
-    <div class="sec-head" style="color:var(--gold);margin-bottom:14px">Settings</div>
-
-    <!-- SMS alerts -->
+    <div class="sec-head" style="color:var(--pink);margin-bottom:14px">Settings</div>
     <div class="config">
-      <div class="field-label">📱 SMS Sell Alerts (via Twilio — free trial available)</div>
-      <div class="sms-note">
-        Get a text when any stock you hold hits a sell trigger (ROCE &lt;12%, D/E &gt;1.0, or 5 closes below 200SMA).
-        Sign up free at <a href="https://twilio.com" target="_blank" style="color:var(--cyan)">twilio.com</a> →
-        get your Account SID, Auth Token, and a free Twilio phone number.
+      <div class="field-label">📱 SMS Sell Alerts (via Twilio)</div>
+      <div class="sms-note">Get a text when any held position hits a sell trigger. Free trial at <a href="https://twilio.com" target="_blank" style="color:var(--blue)">twilio.com</a> — grab Account SID, Auth Token, and a free Twilio number.</div>
+      <div class="sms-row">
+        <div><div class="field-label">Twilio Account SID</div><input type="password" id="twilioSid" placeholder="ACxxxxxxxx…" oninput="saveSms()"></div>
+        <div><div class="field-label">Twilio Auth Token</div><input type="password" id="twilioToken" placeholder="Auth token…" oninput="saveSms()"></div>
       </div>
       <div class="sms-row">
-        <div>
-          <div class="field-label">Twilio Account SID</div>
-          <input type="password" id="twilioSid" placeholder="ACxxxxxxxx…" oninput="saveSms()">
-        </div>
-        <div>
-          <div class="field-label">Twilio Auth Token</div>
-          <input type="password" id="twilioToken" placeholder="Auth token…" oninput="saveSms()">
-        </div>
-      </div>
-      <div class="sms-row">
-        <div>
-          <div class="field-label">Twilio Phone Number (from)</div>
-          <input type="text" id="twilioFrom" placeholder="+1234567890" oninput="saveSms()">
-        </div>
-        <div>
-          <div class="field-label">Your Phone Number (to)</div>
-          <input type="text" id="twilioTo" placeholder="+1234567890" oninput="saveSms()">
-        </div>
+        <div><div class="field-label">Twilio Phone Number (from)</div><input type="text" id="twilioFrom" placeholder="+1234567890" oninput="saveSms()"></div>
+        <div><div class="field-label">Your Phone Number (to)</div><input type="text" id="twilioTo" placeholder="+1234567890" oninput="saveSms()"></div>
       </div>
       <button class="run-btn" onclick="testSms()" style="margin-bottom:8px">📱 Send Test SMS</button>
       <div class="sms-status" id="smsStatus"></div>
     </div>
-
-    <!-- Positions for exit monitoring -->
     <div class="config">
       <div class="field-label">📋 Positions to Monitor for Exit Signals</div>
-      <div class="sms-note">
-        List stocks you currently hold. The screener will check each one for sell triggers
-        (ROCE decay, D/E spike, 200SMA break) and text you if any fire.
-      </div>
+      <div class="sms-note">List stocks you currently hold. The screener checks each for sell triggers and texts you if any fire.</div>
       <div class="field-label">Held positions (comma separated)</div>
       <textarea id="positions" placeholder="e.g. TSM, COST, NVDA" oninput="savePositions()"></textarea>
       <button class="run-btn" onclick="checkExits()" style="margin-top:0">🔍 Check Exit Signals Now</button>
       <div id="exitOut"></div>
     </div>
-
-    <!-- Save indicator -->
-    <div style="font-family:var(--mono);font-size:9px;color:var(--dim);text-align:center;margin-top:8px">
-      Settings auto-save to your browser. API keys never leave your device.
-    </div>
+    <div style="font-family:var(--mono);font-size:9px;color:var(--dim);text-align:center;margin-top:8px">Settings auto-save to your browser. Keys never leave your device.</div>
   </div>
 
 </div><!-- /main -->
@@ -317,79 +445,41 @@ textarea{resize:vertical;min-height:56px}
 const SPEC={roce:15,fcf:5,de:.8,momPct:80,dipMin:10,dipMax:20,smaProx:3,rsiPivot:40};
 const SP500=["AAPL","MSFT","NVDA","AMZN","GOOGL","META","BRK.B","AVGO","TSLA","LLY","JPM","V","XOM","UNH","MA","COST","HD","PG","NFLX","JNJ","ABBV","BAC","CRM","WMT","KO","MRK","CVX","AMD","PEP","ADBE","TMO","ACN","LIN","MCD","CSCO","ABT","WFC","DHR","GE","DIS","TXN","VZ","IBM","INTU","NOW","PM","CAT","AMGN","NEE","CMCSA","UBER","ISRG","SPGI","RTX","UNP","LOW","HON","QCOM","AMAT","BKNG","ETN","PFE","T","COP","SYK","BLK","PGR","SCHW","LMT","TJX","BSX","ELV","VRTX","ADP","MDT","CB","MU","GILD","PANW","MMC","ADI","SBUX","REGN","PLD","ANET","KLAC","CI","BX","SO","DE","LRCX","MO","ZTS","SHW","WM","DUK","FI","ICE","BMY","CL","EQIX","NOC","SLB","APH","MCK","TT","CME","PNC","AON","ITW","MSI","USB","GD","CMG","EOG","TGT","FCX","NKE","WELL","COF","ECL","EMR","HCA","ORLY","CSX","AJG","CDNS","PSA","MAR","MCO","ROP","CARR","SNPS"];
 const ETF_LIST=["SPY","QQQ","SMH","XLF","XLE","XLI","IWM","XLK"];
+const SECTOR_ETF={"Technology":"XLK","Healthcare":"XLV","Financials":"XLF","Energy":"XLE","Industrials":"XLI","Consumer Discretionary":"XLY","Consumer Staples":"XLP","Materials":"XLB","Real Estate":"XLRE","Communication Services":"XLC","Utilities":"XLU","Semiconductors":"SMH"};
+const BROAD_ETFS=["SPY","QQQ","IWM","DIA"];
+const ALL_ETFS=["SPY","QQQ","IWM","DIA","XLK","XLF","XLE","XLI","XLV","XLY","XLP","XLB","XLRE","XLC","XLU","SMH","ARKK","XBI"];
 
 // ══════════════════════════════════════════════════════════════
-// STATE & PERSISTENCE
+// STATE
 // ══════════════════════════════════════════════════════════════
-let mode='individual', results=[], watchlist=[], lastResults={};
+let mode='individual', results=[], watchlist=[], lastResults={}, etfData={}, etfRange='1D', etfHistories={};
 
+// ══════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ══════════════════════════════════════════════════════════════
 function load(){
-  const k=localStorage.getItem('fh_key');    if(k) document.getElementById('apiKey').value=k;
-  const w=localStorage.getItem('wl_v2');    if(w) watchlist=JSON.parse(w);
-  const sid=localStorage.getItem('tw_sid'); if(sid) document.getElementById('twilioSid').value=sid;
-  const tok=localStorage.getItem('tw_tok'); if(tok) document.getElementById('twilioToken').value=tok;
-  const frm=localStorage.getItem('tw_frm'); if(frm) document.getElementById('twilioFrom').value=frm;
-  const to=localStorage.getItem('tw_to');   if(to) document.getElementById('twilioTo').value=to;
+  const k=localStorage.getItem('fh_key');      if(k) document.getElementById('apiKey').value=k;
+  const w=localStorage.getItem('wl_v3');       if(w) watchlist=JSON.parse(w);
+  const sid=localStorage.getItem('tw_sid');    if(sid) document.getElementById('twilioSid').value=sid;
+  const tok=localStorage.getItem('tw_tok');    if(tok) document.getElementById('twilioToken').value=tok;
+  const frm=localStorage.getItem('tw_frm');    if(frm) document.getElementById('twilioFrom').value=frm;
+  const to=localStorage.getItem('tw_to');      if(to) document.getElementById('twilioTo').value=to;
   const pos=localStorage.getItem('positions'); if(pos) document.getElementById('positions').value=pos;
-  renderWatchlist();
+  updateWlCount();
 }
 function saveKey(){localStorage.setItem('fh_key',document.getElementById('apiKey').value);}
-function saveSms(){
-  localStorage.setItem('tw_sid',document.getElementById('twilioSid').value);
-  localStorage.setItem('tw_tok',document.getElementById('twilioToken').value);
-  localStorage.setItem('tw_frm',document.getElementById('twilioFrom').value);
-  localStorage.setItem('tw_to', document.getElementById('twilioTo').value);
-}
+function saveSms(){localStorage.setItem('tw_sid',document.getElementById('twilioSid').value);localStorage.setItem('tw_tok',document.getElementById('twilioToken').value);localStorage.setItem('tw_frm',document.getElementById('twilioFrom').value);localStorage.setItem('tw_to',document.getElementById('twilioTo').value);}
 function savePositions(){localStorage.setItem('positions',document.getElementById('positions').value);}
 
 // ══════════════════════════════════════════════════════════════
 // TABS
 // ══════════════════════════════════════════════════════════════
-function switchTab(t){
+function switchTab(t,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('tab-'+t).classList.add('active');
-  event.target.classList.add('active');
+  if(btn) btn.classList.add('active');
   if(t==='watchlist') renderWatchlist();
-}
-
-// ══════════════════════════════════════════════════════════════
-// TICKER TAPE + ETF HEALTH
-// ══════════════════════════════════════════════════════════════
-async function loadTapeAndEtfs(){
-  const key=localStorage.getItem('fh_key');
-  if(!key) return;
-  const items=[];
-  for(const sym of ETF_LIST){
-    try{
-      const q=await fh(`/quote?symbol=${sym}`,key);
-      const cl=await getHistory(sym);
-      const t=tech(cl);
-      items.push({sym,px:q?.c,chg:q?.dp,up:t?.s200up});
-    }catch{}
-    await sleep(300);
-  }
-  // Build tape (doubled for seamless loop)
-  const tapeHTML=items.map(e=>{
-    const cc=e.chg>=0?'up':'dn';
-    const cs=e.chg!=null?`${e.chg>=0?'▲':'▼'}${Math.abs(e.chg).toFixed(2)}%`:'—';
-    return `<div class="tape-item"><span class="tape-sym">${e.sym}</span><span class="tape-px">${e.px?'$'+e.px.toFixed(2):'—'}</span><span class="tape-chg ${cc}">${cs}</span></div>`;
-  }).join('');
-  document.getElementById('tape').innerHTML=tapeHTML+tapeHTML; // doubled
-
-  // ETF health cards
-  document.getElementById('etfBar').innerHTML=items.map(e=>{
-    const cc=e.chg>=0?'up':'dn';
-    const cs=e.chg!=null?`${e.chg>=0?'+':''}${e.chg.toFixed(2)}%`:'—';
-    const trend=e.up===null?'na':e.up?'up':'dn';
-    const tLabel=e.up===null?'No data':e.up?'Uptrend ↑':'Downtrend ↓';
-    return `<div class="etf-card">
-      <div class="etf-sym">${e.sym}</div>
-      <div class="etf-px">${e.px?'$'+e.px.toFixed(2):'—'}</div>
-      <div class="etf-chg ${cc}">${cs}</div>
-      <div class="etf-trend ${trend}">${tLabel}</div>
-    </div>`;
-  }).join('');
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -399,23 +489,169 @@ async function fh(path,key){
   const r=await fetch(`https://finnhub.io/api/v1${path}&token=${key}`);
   return r.json();
 }
-async function getHistory(sym){
+
+async function getHistory(sym,days=365){
   try{
-    const end=Math.floor(Date.now()/1000),start=end-365*24*60*60;
+    const end=Math.floor(Date.now()/1000),start=end-days*24*60*60;
     const url=`https://query1.finance.yahoo.com/v8/finance/chart/${sym}?interval=1d&period1=${start}&period2=${end}`;
     const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
     const d=await r.json();
     const p=JSON.parse(d.contents);
     const c=p?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-    return Array.isArray(c)?c.filter(Boolean):null;
+    const ts=p?.chart?.result?.[0]?.timestamp;
+    return Array.isArray(c)?{closes:c.filter(Boolean),timestamps:ts}:null;
   }catch{return null;}
+}
+
+// ══════════════════════════════════════════════════════════════
+// ETF SPARKLINES
+// ══════════════════════════════════════════════════════════════
+const ETF_RANGE_DAYS={'1D':1,'1W':7,'1M':30,'3M':90,'YTD':null,'1Y':365,'3Y':1095};
+
+function drawSparkline(canvas,closes,isUp){
+  if(!canvas||!closes||closes.length<2)return;
+  const w=canvas.width=canvas.offsetWidth||90;
+  const h=canvas.height=28;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  const min=Math.min(...closes),max=Math.max(...closes);
+  const range=max-min||1;
+  const pts=closes.map((c,i)=>({x:i/(closes.length-1)*w,y:h-(c-min)/range*(h-4)-2}));
+  ctx.beginPath();
+  ctx.moveTo(pts[0].x,pts[0].y);
+  pts.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));
+  ctx.strokeStyle=isUp?'#4dba87':'#c95f6a';
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  // Fill
+  ctx.lineTo(pts[pts.length-1].x,h);
+  ctx.lineTo(0,h);
+  ctx.closePath();
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,isUp?'rgba(77,186,135,.25)':'rgba(201,95,106,.25)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=grad;
+  ctx.fill();
+}
+
+function getSlicedCloses(sym){
+  const data=etfHistories[sym];
+  if(!data||!data.closes) return null;
+  const closes=data.closes;
+  if(etfRange==='YTD'){
+    const now=new Date(),jan1=new Date(now.getFullYear(),0,1);
+    const ytdDays=Math.floor((now-jan1)/(1000*60*60*24));
+    return closes.slice(-Math.min(ytdDays,closes.length));
+  }
+  const days=ETF_RANGE_DAYS[etfRange]||365;
+  return closes.slice(-Math.min(days,closes.length));
+}
+
+function setEtfRange(range,btn){
+  etfRange=range;
+  document.querySelectorAll('.etf-range-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderEtfGrid();
+}
+
+function renderEtfGrid(){
+  const items=ETF_LIST.map(sym=>{
+    const d=etfData[sym];
+    if(!d) return null;
+    const sliced=getSlicedCloses(sym);
+    const startPx=sliced&&sliced.length>1?sliced[0]:null;
+    const curPx=d.px;
+    const rangeChg=startPx&&curPx?((curPx-startPx)/startPx*100):null;
+    const displayChg=rangeChg??d.chg1d;
+    const isUp=displayChg>=0;
+    return {sym,px:d.px,chg:displayChg,up:d.up,sliced};
+  }).filter(Boolean);
+
+  document.getElementById('etfGrid').innerHTML=items.map(e=>{
+    const cc=e.chg>=0?'up':'dn';
+    const cs=e.chg!=null?`${e.chg>=0?'+':''}${e.chg.toFixed(2)}%`:'—';
+    const tLabel=e.up===null?'No data':e.up?'Uptrend ↑':'Downtrend ↓';
+    const trend=e.up===null?'na':e.up?'up':'dn';
+    return `<div class="etf-card">
+      <div class="etf-sym">${e.sym}</div>
+      <div class="etf-px">${e.px?'$'+e.px.toFixed(2):'—'}</div>
+      <div class="etf-chg ${cc}">${cs}</div>
+      <canvas class="etf-sparkline" id="spark-${e.sym}"></canvas>
+      <div class="etf-trend ${trend}">${tLabel}</div>
+    </div>`;
+  }).join('');
+
+  // Draw sparklines after DOM update
+  setTimeout(()=>{
+    items.forEach(e=>{
+      const canvas=document.getElementById(`spark-${e.sym}`);
+      if(canvas&&e.sliced) drawSparkline(canvas,e.sliced,e.chg>=0);
+    });
+  },50);
+
+  // Update tape
+  const tapeHTML=items.map(e=>{
+    const cc=e.chg>=0?'up':'dn';
+    const cs=e.chg!=null?`${e.chg>=0?'▲':'▼'}${Math.abs(e.chg).toFixed(2)}%`:'—';
+    return `<div class="tape-item"><span class="tape-sym">${e.sym}</span><span class="tape-px">${e.px?'$'+e.px.toFixed(2):'—'}</span><span class="tape-chg ${cc}">${cs}</span></div>`;
+  }).join('');
+  document.getElementById('tape').innerHTML=tapeHTML+tapeHTML;
+}
+
+async function loadEtfs(key){
+  for(const sym of ETF_LIST){
+    try{
+      const q=await fh(`/quote?symbol=${sym}`,key);
+      const hist=await getHistory(sym,1095); // 3Y for full range
+      etfHistories[sym]=hist;
+      const closes=hist?.closes;
+      const n=closes?.length;
+      const s200=n>=200?closes.slice(-200).reduce((a,b)=>a+b,0)/200:null;
+      const s200p=n>=220?closes.slice(-220,-20).reduce((a,b)=>a+b,0)/200:null;
+      etfData[sym]={px:q?.c,chg1d:q?.dp,up:s200&&s200p?s200>s200p:null};
+    }catch{}
+    await sleep(300);
+  }
+  renderEtfGrid();
+}
+
+// ══════════════════════════════════════════════════════════════
+// BETA CALCULATION
+// ══════════════════════════════════════════════════════════════
+function calcBeta(stockCloses,etfCloses){
+  if(!stockCloses||!etfCloses||stockCloses.length<30) return null;
+  const n=Math.min(stockCloses.length,etfCloses.length,252);
+  const sc=stockCloses.slice(-n), ec=etfCloses.slice(-n);
+  const sr=[],er=[];
+  for(let i=1;i<n;i++){sr.push((sc[i]-sc[i-1])/sc[i-1]);er.push((ec[i]-ec[i-1])/ec[i-1]);}
+  const em=er.reduce((a,b)=>a+b,0)/er.length;
+  const cov=sr.reduce((a,b,i)=>a+(b-(sr.reduce((x,y)=>x+y,0)/sr.length))*(er[i]-em),0)/(n-1);
+  const vari=er.reduce((a,b)=>a+(b-em)*(b-em),0)/(n-1);
+  return vari>0?parseFloat((cov/vari).toFixed(2)):null;
+}
+
+function calcRS(stockCloses,etfCloses,days=252){
+  if(!stockCloses||!etfCloses||stockCloses.length<10) return null;
+  const n=Math.min(stockCloses.length,etfCloses.length,days);
+  const sc=stockCloses.slice(-n),ec=etfCloses.slice(-n);
+  if(!sc[0]||!ec[0]) return null;
+  const stockRet=(sc[sc.length-1]-sc[0])/sc[0]*100;
+  const etfRet=(ec[ec.length-1]-ec[0])/ec[0]*100;
+  return parseFloat((stockRet-etfRet).toFixed(1));
+}
+
+async function getEtfHistory(sym,key){
+  if(etfHistories[sym]) return etfHistories[sym].closes;
+  const hist=await getHistory(sym,400);
+  if(hist) etfHistories[sym]=hist;
+  return hist?.closes||null;
 }
 
 // ══════════════════════════════════════════════════════════════
 // TECHNICALS
 // ══════════════════════════════════════════════════════════════
 function tech(cls){
-  if(!cls||cls.length<60)return null;
+  if(!cls||cls.length<60) return null;
   const n=cls.length;
   const sma=(p,e)=>{if(e-p+1<0)return null;let s=0;for(let i=e-p+1;i<=e;i++)s+=cls[i];return s/p;};
   const s200=sma(Math.min(200,n),n-1),s200p=n>220?sma(Math.min(200,n),n-21):null;
@@ -454,7 +690,7 @@ function evalV(m){
     get passed(){return this.pR||this.pF||this.pD;}};
 }
 function evalT(t){if(!t)return{passed:false,up:null,mom:null};return{up:t.s200up,mom:t.mom,passed:t.s200up===true};}
-function evalD(t){if(!t)return{passed:false,draw:null,inR:false,near:false};const inR=t.draw>=SPEC.dipMin&&t.draw<=SPEC.dipMax,near=t.nearS100||t.nearS200;return{draw:t.draw,inR,near,nearS100:t.nearS100,nearS200:t.nearS200,passed:inR&&near};}
+function evalD(t){if(!t)return{passed:false,draw:null,inR:false,near:false};const inR=t.draw>=SPEC.dipMin&&t.draw<=SPEC.dipMax,near=t.nearS100||t.nearS200;return{draw:t.draw,inR,near,passed:inR&&near};}
 function evalP(t){if(!t)return{passed:false,rsi:null,mh:null};return{rsi:t.rsi,rsiCross:t.rsiCross,mh:t.macdH,macdCross:t.macdCross,passed:t.rsiCross||t.macdCross};}
 
 // ══════════════════════════════════════════════════════════════
@@ -470,29 +706,45 @@ function setMode(m){
 
 async function run(){
   const key=document.getElementById('apiKey').value.trim();
-  if(!key){err('Paste your Finnhub API key first — or save it in Settings.');return;}
+  if(!key){err('Paste your Finnhub API key first.');return;}
   let syms=[];
   if(mode==='individual'){
     const raw=document.getElementById('tickers').value.trim();
     syms=raw?raw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean):SP500.slice(0,40);
-    if(!raw) setMode('sp500'); // auto-switch if blank
   } else {
     const lim=parseInt(document.getElementById('scanLimit').value)||40;
     syms=SP500.slice(0,Math.min(lim,SP500.length));
   }
   setRunning(true);clearErr();document.getElementById('out').innerHTML='';results=[];
-  loadTapeAndEtfs(); // load ETF tape now that we have the key
+  // Load ETFs concurrently
+  loadEtfs(key);
+  // Load SPY history for beta calculations
+  if(!etfHistories['SPY']) await getHistory('SPY',400).then(h=>{if(h)etfHistories['SPY']=h;});
+
   for(let i=0;i<syms.length;i++){
     const sym=syms[i];
     prog(`Analyzing ${sym} (${i+1}/${syms.length})…`,(i/syms.length)*100);
     try{
       const [q,mt,pr]=await Promise.all([fh(`/quote?symbol=${sym}`,key),fh(`/stock/metric?symbol=${sym}&metric=all`,key),fh(`/stock/profile2?symbol=${sym}`,key)]);
-      const cl=await getHistory(sym);
+      const hist=await getHistory(sym);
       if(!pr||!pr.ticker)continue;
-      const t=tech(cl),v=evalV(mt),tr=evalT(t),d=evalD(t),p=evalP(t);
-      const r={sym,pr,q,v,tr,d,p,t,mom:t?.mom??null};
+      const closes=hist?.closes||null;
+      const t=tech(closes);
+      const v=evalV(mt),tr=evalT(t),d=evalD(t),p=evalP(t);
+      // Beta vs SPY
+      const spyCloses=etfHistories['SPY']?.closes||null;
+      const beta=calcBeta(closes,spyCloses);
+      // Sector RS
+      const sectorEtf=SECTOR_ETF[pr.finnhubIndustry]||SECTOR_ETF[pr.sector]||null;
+      let rs=null;
+      if(sectorEtf){
+        const secCloses=await getEtfHistory(sectorEtf,key);
+        rs={sym:sectorEtf,val:calcRS(closes,secCloses)};
+      }
+      const r={sym,pr,q,v,tr,d,p,t,mom:t?.mom??null,beta,rs,closes};
       results.push(r);
-      lastResults[sym]=r; // cache for watchlist
+      lastResults[sym]=r;
+      updateSidebarWl();
     }catch(e){console.warn(sym,e);}
     await sleep(600);
   }
@@ -509,63 +761,80 @@ async function run(){
   results.sort((a,b)=>a.trigger===b.trigger?(b.mom||-999)-(a.mom||-999):a.trigger?-1:1);
   setRunning(false);
   render();
-  // Check exit signals for held positions
+  updateSidebarWl();
   checkExits();
 }
 
 // ══════════════════════════════════════════════════════════════
-// RENDER RESULTS
+// RENDER
 // ══════════════════════════════════════════════════════════════
 function render(){
   const trig=results.filter(r=>r.trigger);
   const part=results.filter(r=>!r.trigger&&(r.v.passed||r.tr.passed||r.d.passed||r.p.passed));
   const p1w =results.filter(r=>!r.v.passed&&(r.tr.passed||r.d.passed||r.p.passed));
   let h=`<div class="stats"><span>Scanned: <strong>${results.length}</strong></span><span>Triggers: <strong style="color:var(--green)">${trig.length}</strong></span><span>Watching: <strong>${part.length}</strong></span></div>`;
-  if(trig.length){
-    h+=`<div class="sec-head" style="color:var(--green)">🎯 Full Triggers — All 4 Phases Passed</div>`;
-    trig.forEach(r=>{h+=card(r);});
-  } else {
-    h+=`<div class="no-trig"><strong style="color:var(--mid);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase">No Full Triggers This Scan</strong><br><br>Market may be near highs (dip too shallow) or the pivot hasn't fired yet. Check the watchlist below for stocks closest to triggering.</div>`;
-  }
-  if(part.length){h+=`<div class="sec-head" style="color:var(--gold);margin-top:16px">👀 Watchlist Candidates — Passed Some Phases</div>`;part.forEach(r=>{h+=card(r);});}
+  if(trig.length){h+=`<div class="sec-head" style="color:var(--green)">🎯 Full Triggers — All 4 Phases Passed</div>`;trig.forEach(r=>{h+=card(r);});}
+  else{h+=`<div class="no-trig"><strong style="color:var(--mid);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase">No Full Triggers This Scan</strong><br><br>Market may be near highs (dip too shallow) or the pivot hasn't fired yet. Check the watchlist candidates below.</div>`;}
+  if(part.length){h+=`<div class="sec-head" style="color:var(--pink);margin-top:16px">👀 Watchlist Candidates — Passed Some Phases</div>`;part.forEach(r=>{h+=card(r);});}
   if(p1w.length){h+=`<div class="sec-head" style="color:var(--orange);margin-top:16px">📋 Phase 1 Watch — Good Technicals, Fundamentals Improving</div>`;p1w.forEach(r=>{h+=card(r);});}
   document.getElementById('out').innerHTML=h;
 }
 
+function betaClass(b){return b===null?'n':b<1?'low':b<1.5?'mid':'high';}
+
 function card(r){
-  const{sym,pr,q,v,tr,d,p,trigger}=r;
+  const{sym,pr,q,v,tr,d,p,beta,rs,trigger}=r;
   const px=q?.c,chg=q?.dp;
   const cc=chg>=0?'up':'dn',cs=chg!=null?`${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(2)}%`:'—';
   const phases=[{l:'Value',pass:v.passed},{l:'Trend',pass:tr.passed},{l:'Dip',pass:d.passed},{l:'Pivot',pass:p.passed}];
   const chips=phases.map(ph=>`<div class="chip ${ph.pass?'pass':'fail'}"><div class="chip-dot"></div>${ph.l}</div>`).join('');
-  const cmd=`Using my Robinhood Agentic account (connected via MCP at agent.robinhood.com/mcp/trading), please place a market order to BUY [SHARES] shares of ${sym} at market price. Show me a trade preview before confirming execution.`;
   const inWl=watchlist.includes(sym);
+  const cmd=`Using my Robinhood Agentic account (connected via MCP at agent.robinhood.com/mcp/trading), please place a market order to BUY [SHARES] shares of ${sym} at market price. Show me a trade preview before confirming execution.`;
+  const sectorEtfSym=SECTOR_ETF[pr.finnhubIndustry]||SECTOR_ETF[pr.sector]||null;
+  // Beta dropdown options
+  const ddOptions=[
+    '<div class="beta-dd-section">Broad Market</div>',
+    ...BROAD_ETFS.map(e=>`<div class="beta-dd-item broad ${e==='SPY'?'selected':''}" onclick="updateBeta('${sym}','${e}',event)">${e}</div>`),
+    '<div class="beta-dd-section">Sector ETFs</div>',
+    ...Object.entries(SECTOR_ETF).map(([sec,etf])=>`<div class="beta-dd-item${etf===sectorEtfSym?' sector':''}" onclick="updateBeta('${sym}','${etf}',event)">${etf} <span style="font-size:8px;opacity:.6">${sec}</span></div>`),
+  ].join('');
+  const bc=betaClass(beta);
   const mrow=(lbl,val,pass)=>`<div class="mrow"><div class="mlabel">${lbl}</div><div class="mval ${pass===null?'n':pass?'pass':'fail'}">${val}${pass===true?' ✓':pass===false?' ✗':''}</div></div>`;
   return`<div class="card ${trigger?'trigger':''}" id="c-${sym}">
-  <div class="card-top" onclick="tog('${sym}')">
-    <div><div class="ticker">${sym}</div><div class="exch">${pr.exchange||'US'}</div></div>
-    <div><div class="co-name">${(pr.name||'').slice(0,24)}</div><div class="co-ind">${(pr.finnhubIndustry||'').slice(0,26)}</div></div>
-    <div class="price-col">
-      <div class="price">${px?'$'+px.toFixed(2):'—'}</div>
-      <div class="chg ${cc}">${cs}</div>
+  <div class="card-top" onclick="togCard(event,'${sym}')">
+    <div class="card-row1">
+      <div><div class="ticker">${sym}</div><div class="exch">${pr.exchange||'US'}</div></div>
+      <div><div class="co-name">${(pr.name||'').slice(0,26)}</div><div class="co-ind">${(pr.finnhubIndustry||'').slice(0,28)}</div></div>
+      <div class="price-col"><div class="price">${px?'$'+px.toFixed(2):'—'}</div><div class="chg ${cc}">${cs}</div></div>
     </div>
-  </div>
-  <div class="chips">
-    ${chips}
-    <button class="add-wl-btn" onclick="event.stopPropagation();toggleWl('${sym}')" id="wlbtn-${sym}">${inWl?'★ Watching':'☆ Watch'}</button>
+    <div class="card-row2">
+      <div class="beta-rs">
+        <div class="beta-wrap" id="beta-wrap-${sym}">
+          <span class="beta-label">β(SPY</span>
+          <button class="beta-drop-btn" onclick="toggleBetaDd('${sym}',event)">▼)</button>
+          <span class="beta-val ${bc}" id="beta-val-${sym}">${beta!==null?beta:'—'}</span>
+          <div class="beta-dropdown" id="beta-dd-${sym}">${ddOptions}</div>
+        </div>
+        ${rs?`<div class="rs-wrap"><span class="rs-label">RS(${rs.sym})</span><span class="rs-val ${rs.val>=0?'pos':'neg'}" id="rs-val-${sym}">${rs.val!==null?(rs.val>=0?'+':'')+rs.val+'%':'—'}</span></div>`:''}
+      </div>
+      <div class="chips">
+        ${chips}
+        <button class="add-wl-btn ${inWl?'watching':''}" onclick="event.stopPropagation();toggleWl('${sym}')" id="wlbtn-${sym}">${inWl?'★ Watching':'☆ Watch'}</button>
+      </div>
+    </div>
   </div>
   ${trigger?`<div class="trig-banner">◈ FULL TRIGGER — quality business · confirmed uptrend · healthy dip · pivot confirmed</div>`:''}
   <div class="detail" id="d-${sym}">
     <div>
       <div class="dt">Phase 1 — Value</div>
-      ${mrow('ROCE/ROE',v.roce!=null?v.roce.toFixed(1)+'%':'—',v.pR)}
+      ${mrow('Return on Capital',v.roce!=null?v.roce.toFixed(1)+'%':'—',v.pR)}
       ${mrow('FCF Yield',v.fcf!=null?v.fcf+'%':'—',v.pF)}
-      ${mrow('D/E',v.de!=null?v.de.toFixed(2):'—',v.pD)}
+      ${mrow('Debt Level (D/E)',v.de!=null?v.de.toFixed(2):'—',v.pD)}
       ${mrow('P/E',v.pe!=null?v.pe.toFixed(1):'—',null)}
       <div class="dt" style="margin-top:12px">Phase 3 — Dip</div>
-      ${mrow('Drawdown',d.draw!=null?'-'+d.draw+'%':'—',d.inR)}
-      ${mrow('In 10-20% range',d.inR?'Yes':'No',d.inR)}
-      ${mrow('Near SMA floor',d.near?'Yes':'No',d.near)}
+      ${mrow('Off 52-week high',d.draw!=null?'-'+d.draw+'%':'—',d.inR)}
+      ${mrow('In dip range',d.inR?'Yes':'No',d.inR)}
+      ${mrow('Near support floor',d.near?'Yes':'No',d.near)}
     </div>
     <div>
       <div class="dt">Phase 2 — Trend</div>
@@ -573,86 +842,128 @@ function card(r){
       ${mrow('200D SMA Slope',tr.up===null?'—':tr.up?'Rising ↑':'Flat ↓',tr.up)}
       <div class="dt" style="margin-top:12px">Phase 4 — Pivot</div>
       ${mrow('RSI-14',p.rsi!=null?p.rsi:'—',p.rsiCross)}
-      ${mrow('RSI crossed >40',p.rsiCross?'Yes':'No',p.rsiCross)}
-      ${mrow('MACD turned +',p.macdCross?'Yes':'No',p.macdCross)}
+      ${mrow('RSI pivot crossed',p.rsiCross?'Yes':'No',p.rsiCross)}
+      ${mrow('MACD turned positive',p.macdCross?'Yes':'No',p.macdCross)}
       ${trigger?`<div class="rh-box" onclick="cp('${sym}','${cmd.replace(/'/g,"\\'")}')"><div class="rh-lbl">Copy trade command → Claude Desktop</div>${cmd.slice(0,90)}…<div class="toast" id="t-${sym}">Copied!</div></div>`:''}
     </div>
   </div>
 </div>`;
 }
 
-function tog(sym){document.getElementById('d-'+sym).classList.toggle('open');}
+function togCard(e,sym){
+  if(e.target.closest('.beta-drop-btn,.beta-dropdown,.add-wl-btn')) return;
+  document.getElementById('d-'+sym).classList.toggle('open');
+}
 function cp(sym,cmd){navigator.clipboard.writeText(cmd).then(()=>{const t=document.getElementById('t-'+sym);t.classList.add('on');setTimeout(()=>t.classList.remove('on'),2000);});}
+
+// ══════════════════════════════════════════════════════════════
+// BETA DROPDOWN
+// ══════════════════════════════════════════════════════════════
+function toggleBetaDd(sym,e){
+  e.stopPropagation();
+  const dd=document.getElementById('beta-dd-'+sym);
+  const isOpen=dd.classList.contains('open');
+  document.querySelectorAll('.beta-dropdown').forEach(d=>d.classList.remove('open'));
+  if(!isOpen) dd.classList.add('open');
+}
+document.addEventListener('click',()=>document.querySelectorAll('.beta-dropdown').forEach(d=>d.classList.remove('open')));
+
+async function updateBeta(sym,etfSym,e){
+  e.stopPropagation();
+  const r=lastResults[sym];
+  if(!r) return;
+  const key=document.getElementById('apiKey').value.trim();
+  const etfCloses=await getEtfHistory(etfSym,key);
+  const newBeta=calcBeta(r.closes,etfCloses);
+  const newRS=calcRS(r.closes,etfCloses);
+  // Update display
+  const bv=document.getElementById('beta-val-'+sym);
+  const rv=document.getElementById('rs-val-'+sym);
+  const wrap=document.getElementById('beta-wrap-'+sym);
+  if(bv){const bc=betaClass(newBeta);bv.className=`beta-val ${bc}`;bv.textContent=newBeta!==null?newBeta:'—';}
+  if(rv){rv.className=`rs-val ${newRS>=0?'pos':'neg'}`;rv.textContent=newRS!==null?(newRS>=0?'+':'')+newRS+'%':'—';}
+  // Update dropdown label
+  const btn=wrap?.querySelector('.beta-drop-btn');
+  if(btn) btn.textContent=`▼)`;
+  const label=wrap?.querySelector('.beta-label');
+  if(label) label.textContent=`β(${etfSym}`;
+  // Close dropdown + mark selected
+  document.getElementById(`beta-dd-${sym}`).classList.remove('open');
+  document.querySelectorAll(`#beta-dd-${sym} .beta-dd-item`).forEach(i=>i.classList.remove('selected'));
+  e.target.classList.add('selected');
+}
 
 // ══════════════════════════════════════════════════════════════
 // WATCHLIST
 // ══════════════════════════════════════════════════════════════
+function updateWlCount(){
+  document.getElementById('wlCount').textContent=watchlist.length;
+}
+
 function toggleWl(sym){
   if(watchlist.includes(sym)) watchlist=watchlist.filter(s=>s!==sym);
   else watchlist.push(sym);
-  localStorage.setItem('wl_v2',JSON.stringify(watchlist));
+  localStorage.setItem('wl_v3',JSON.stringify(watchlist));
   const btn=document.getElementById('wlbtn-'+sym);
-  if(btn) btn.textContent=watchlist.includes(sym)?'★ Watching':'☆ Watch';
+  if(btn){btn.textContent=watchlist.includes(sym)?'★ Watching':'☆ Watch';btn.classList.toggle('watching',watchlist.includes(sym));}
+  updateWlCount();
+  updateSidebarWl();
 }
 
 function addToWatchlist(sym){
   sym=sym.trim().toUpperCase();
-  if(!sym||watchlist.includes(sym))return;
+  if(!sym||watchlist.includes(sym)) return;
   watchlist.push(sym);
-  localStorage.setItem('wl_v2',JSON.stringify(watchlist));
+  localStorage.setItem('wl_v3',JSON.stringify(watchlist));
   document.getElementById('wlInput').value='';
+  updateWlCount();
   renderWatchlist();
+  updateSidebarWl();
+}
+
+function updateSidebarWl(){
+  const el=document.getElementById('sidebarWl');
+  updateWlCount();
+  if(!watchlist.length){el.innerHTML='<div class="sidebar-wl-empty">Add stocks with ☆ Watch on any card</div>';return;}
+  el.innerHTML=watchlist.map(sym=>{
+    const r=lastResults[sym];
+    const chips=r?[{l:'V',pass:r.v.passed},{l:'T',pass:r.tr.passed},{l:'D',pass:r.d.passed},{l:'P',pass:r.p.passed}].map(ph=>`<div class="chip ${ph.pass?'pass':'fail'}" style="padding:2px 5px;font-size:8px"><div class="chip-dot"></div>${ph.l}</div>`).join(''):'<span style="font-size:9px;color:var(--dim)">Run screener</span>';
+    let prox='';
+    if(r){
+      const alerts=[];
+      if(!r.p.passed&&r.p.rsi!==null) alerts.push(`RSI ${r.p.rsi} (need >40)`);
+      if(!r.d.inR&&r.d.draw!==null){if(r.d.draw<SPEC.dipMin)alerts.push(`Dip only ${r.d.draw}% (need >10%)`);if(r.d.draw>SPEC.dipMax)alerts.push(`Dip ${r.d.draw}% too deep`);}
+      if(r.trigger) prox='<div class="sidebar-wl-prox">🎯 Full trigger fired</div>';
+      else if(alerts.length) prox=`<div class="sidebar-wl-prox">⚡ ${alerts[0]}</div>`;
+    }
+    return`<div class="sidebar-wl-item"><div class="sidebar-wl-sym">${sym}</div><div class="sidebar-wl-name">${r?.pr?.name||'—'}</div><div class="sidebar-wl-chips">${chips}</div>${prox}</div>`;
+  }).join('');
 }
 
 function renderWatchlist(){
   const el=document.getElementById('wlPanel');
-  if(!watchlist.length){
-    el.innerHTML=`<div class="wl-empty">No stocks on your watchlist yet.<br>Run the screener and click ☆ Watch on any card.</div>`;
-    return;
-  }
+  if(!watchlist.length){el.innerHTML='<div class="wl-empty">No stocks on your watchlist yet.<br>Run the screener and click ☆ Watch on any card.</div>';return;}
   el.innerHTML=watchlist.map(sym=>{
     const r=lastResults[sym];
-    const phases=r?[
-      {l:'Value',pass:r.v.passed},{l:'Trend',pass:r.tr.passed},
-      {l:'Dip',pass:r.d.passed},{l:'Pivot',pass:r.p.passed}
-    ]:null;
+    const phases=r?[{l:'Value',pass:r.v.passed},{l:'Trend',pass:r.tr.passed},{l:'Dip',pass:r.d.passed},{l:'Pivot',pass:r.p.passed}]:null;
     const chips=phases?phases.map(p=>`<div class="chip ${p.pass?'pass':'fail'}"><div class="chip-dot"></div>${p.l}</div>`).join(''):'<span style="font-size:10px;color:var(--dim)">Run screener to load data</span>';
-
-    // Proximity alerts
     let proximity='';
     if(r){
       const alerts=[];
-      if(!r.p.passed&&r.p.rsi!==null) alerts.push(`RSI ${r.p.rsi} — needs >${SPEC.rsiPivot} for pivot (${(SPEC.rsiPivot-r.p.rsi).toFixed(1)} pts away)`);
-      if(!r.d.inR&&r.d.draw!==null){
-        if(r.d.draw<SPEC.dipMin) alerts.push(`Drawdown ${r.d.draw}% — needs >${SPEC.dipMin}% dip (${(SPEC.dipMin-r.d.draw).toFixed(1)}% more)`);
-        if(r.d.draw>SPEC.dipMax) alerts.push(`Drawdown ${r.d.draw}% — too deep (>${SPEC.dipMax}%)`);
-      }
-      if(!r.tr.up&&r.tr.up!==null) alerts.push(`200D SMA not yet sloping up`);
-      if(alerts.length) proximity=`<div class="wl-proximity">⚡ ${alerts.join(' · ')}</div>`;
-      else if(r.trigger) proximity=`<div class="wl-proximity" style="color:var(--green)">🎯 FULL TRIGGER — all 4 phases passed</div>`;
-      else proximity=`<div class="wl-proximity" style="color:var(--green)">✓ Looking good — run screener for latest</div>`;
+      if(!r.p.passed&&r.p.rsi!==null)alerts.push(`RSI ${r.p.rsi} — needs >40 for pivot (${(40-r.p.rsi).toFixed(1)} pts away)`);
+      if(!r.d.inR&&r.d.draw!==null){if(r.d.draw<SPEC.dipMin)alerts.push(`Drawdown ${r.d.draw}% — needs >10% dip`);if(r.d.draw>SPEC.dipMax)alerts.push(`Drawdown ${r.d.draw}% — too deep (>20%)`);}
+      if(!r.tr.up&&r.tr.up!==null)alerts.push('200D SMA not yet sloping up');
+      if(alerts.length)proximity=`<div class="wl-proximity">⚡ ${alerts.join(' · ')}</div>`;
+      else if(r.trigger)proximity=`<div class="wl-proximity" style="color:var(--green)">🎯 FULL TRIGGER — all 4 phases passed</div>`;
     }
-
-    return`<div class="wl-card">
-      <div class="wl-header">
-        <div class="wl-sym">${sym}</div>
-        <button class="wl-remove" onclick="removeWl('${sym}')">Remove</button>
-      </div>
-      <div class="wl-name">${r?.pr?.name||'Run screener to load name'}</div>
-      <div class="wl-phases">${chips}</div>
-      ${proximity}
-    </div>`;
+    return`<div class="wl-card"><div class="wl-header"><div class="wl-sym">${sym}</div><button class="wl-remove" onclick="removeWl('${sym}')">Remove</button></div><div class="wl-name">${r?.pr?.name||'Run screener to load'}</div><div class="wl-phases">${chips}</div>${proximity}</div>`;
   }).join('');
 }
 
-function removeWl(sym){
-  watchlist=watchlist.filter(s=>s!==sym);
-  localStorage.setItem('wl_v2',JSON.stringify(watchlist));
-  renderWatchlist();
-}
+function removeWl(sym){watchlist=watchlist.filter(s=>s!==sym);localStorage.setItem('wl_v3',JSON.stringify(watchlist));updateWlCount();renderWatchlist();updateSidebarWl();}
 
 // ══════════════════════════════════════════════════════════════
-// SMS ALERTS (Twilio)
+// SMS / EXIT MONITORING
 // ══════════════════════════════════════════════════════════════
 async function sendSms(msg){
   const sid=document.getElementById('twilioSid').value.trim();
@@ -660,67 +971,34 @@ async function sendSms(msg){
   const frm=document.getElementById('twilioFrom').value.trim();
   const to=document.getElementById('twilioTo').value.trim();
   if(!sid||!tok||!frm||!to) return false;
-  try{
-    const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{
-      method:'POST',
-      headers:{
-        'Authorization':'Basic '+btoa(sid+':'+tok),
-        'Content-Type':'application/x-www-form-urlencoded'
-      },
-      body:`To=${encodeURIComponent(to)}&From=${encodeURIComponent(frm)}&Body=${encodeURIComponent(msg)}`
-    });
-    return r.ok;
-  }catch{return false;}
+  try{const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{method:'POST',headers:{'Authorization':'Basic '+btoa(sid+':'+tok),'Content-Type':'application/x-www-form-urlencoded'},body:`To=${encodeURIComponent(to)}&From=${encodeURIComponent(frm)}&Body=${encodeURIComponent(msg)}`});return r.ok;}catch{return false;}
 }
-
-async function testSms(){
-  const st=document.getElementById('smsStatus');
-  st.className='sms-status';st.textContent='Sending…';st.style.display='block';
-  const ok=await sendSms('Hooks Screener: Test message ✓ SMS alerts are working.');
-  st.className=ok?'sms-status ok':'sms-status er';
-  st.textContent=ok?'✓ Test SMS sent successfully!':'✗ Failed — check your Twilio credentials and phone numbers.';
-}
-
-// ══════════════════════════════════════════════════════════════
-// EXIT SIGNAL MONITORING
-// ══════════════════════════════════════════════════════════════
+async function testSms(){const st=document.getElementById('smsStatus');st.className='sms-status';st.textContent='Sending…';st.style.display='block';const ok=await sendSms('Hooks Screener: Test message ✓ SMS alerts working.');st.className=ok?'sms-status ok':'sms-status er';st.textContent=ok?'✓ Test SMS sent!':'✗ Failed — check Twilio credentials.';}
 async function checkExits(){
-  const key=document.getElementById('apiKey').value.trim();
-  if(!key) return;
-  const posStr=document.getElementById('positions').value.trim();
-  if(!posStr) return;
+  const key=document.getElementById('apiKey').value.trim();if(!key)return;
+  const posStr=document.getElementById('positions').value.trim();if(!posStr)return;
   const positions=posStr.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
-  const el=document.getElementById('exitOut');
-  el.innerHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--cyan);margin-top:10px">Checking exit signals…</div>`;
+  const el=document.getElementById('exitOut');el.innerHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-top:10px">Checking exit signals…</div>`;
   const fires=[];
   for(const sym of positions){
-    try{
-      const [mt,cl]=await Promise.all([fh(`/stock/metric?symbol=${sym}&metric=all`,key),getHistory(sym)]);
-      const m=mt?.metric||{};
-      const t=tech(cl);
-      const roce=m.roeTTM||m.roeRfy;
-      const de=m['totalDebt/totalEquityAnnual']||m['totalDebt/totalEquityQuarterly'];
-      if(roce!==null&&roce<12) fires.push({sym,reason:`ROCE/ROE ${roce?.toFixed(1)}% fell below 12% — fundamental decay`});
-      if(de!==null&&de>1.0) fires.push({sym,reason:`D/E ${de?.toFixed(2)} spiked above 1.0 — leverage risk`});
-      if(t&&t.s200!==null&&t.cur<t.s200) fires.push({sym,reason:`Price $${t.cur?.toFixed(2)} below 200D SMA $${t.s200?.toFixed(2)} — monitor for 5-day break`});
+    try{const [mt,hist]=await Promise.all([fh(`/stock/metric?symbol=${sym}&metric=all`,key),getHistory(sym)]);
+      const m=mt?.metric||{};const cls=hist?.closes||null;const t=tech(cls);
+      const roce=m.roeTTM||m.roeRfy;const de=m['totalDebt/totalEquityAnnual']||m['totalDebt/totalEquityQuarterly'];
+      if(roce!==null&&roce<12)fires.push({sym,reason:`Return on capital ${roce?.toFixed(1)}% fell below 12% — fundamental decay`});
+      if(de!==null&&de>1.0)fires.push({sym,reason:`D/E ${de?.toFixed(2)} spiked above 1.0 — leverage risk`});
+      if(t&&t.s200!==null&&t.cur<t.s200)fires.push({sym,reason:`Price $${t.cur?.toFixed(2)} below 200D SMA $${t.s200?.toFixed(2)} — monitor for 5-day break`});
     }catch{}
     await sleep(600);
   }
-  if(fires.length){
-    el.innerHTML=fires.map(f=>`<div style="background:var(--reddim);border:1px solid rgba(201,95,106,.3);border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--red)">⚠ <strong>${f.sym}</strong> — ${f.reason}</div>`).join('');
-    const msg=fires.map(f=>`SELL SIGNAL: ${f.sym} — ${f.reason}`).join('\n');
-    await sendSms(`Hooks Screener Exit Alerts:\n${msg}`);
-  } else {
-    el.innerHTML=`<div style="background:var(--greendim);border:1px solid rgba(77,186,135,.3);border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--green)">✓ No exit signals — all held positions look clean</div>`;
-  }
+  if(fires.length){el.innerHTML=fires.map(f=>`<div style="background:var(--reddim);border:1px solid rgba(201,95,106,.3);border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--red)">⚠ <strong>${f.sym}</strong> — ${f.reason}</div>`).join('');await sendSms(`Hooks Screener Exit Alerts:\n${fires.map(f=>`${f.sym}: ${f.reason}`).join('\n')}`);}
+  else{el.innerHTML=`<div style="background:var(--greendim);border:1px solid rgba(77,186,135,.3);border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--green)">✓ No exit signals — all held positions look clean</div>`;}
 }
 
 // ══════════════════════════════════════════════════════════════
 // UI HELPERS
 // ══════════════════════════════════════════════════════════════
 function setRunning(on){
-  const b=document.getElementById('runBtn');
-  b.disabled=on;b.textContent=on?'⟳  Scanning…':'▶  Run Screener';
+  const b=document.getElementById('runBtn');b.disabled=on;b.textContent=on?'⟳  Scanning…':'▶  Run Screener';
   document.getElementById('prog').classList.toggle('on',on);
   if(!on)document.getElementById('pbar').style.width='100%';
 }
@@ -729,16 +1007,7 @@ function err(msg){const e=document.getElementById('errBox');e.textContent=msg;e.
 function clearErr(){document.getElementById('errBox').classList.remove('on');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
 
-// ══════════════════════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════════════════════
-window.addEventListener('load',()=>{
-  load();
-  // Tape and ETFs load when Run Screener is clicked — not on page open
-  // (no key available yet on first load)
-  document.getElementById('tape').innerHTML='<div class="tape-item"><span class="tape-sym" style="color:var(--dim);font-weight:400">Market data loads when you run the screener</span></div>';
-  document.getElementById('etfBar').innerHTML='<div style="font-size:10px;color:var(--dim);font-family:var(--mono);padding:4px 0">Run screener to load ETF market health →</div>';
-});
+window.addEventListener('load',()=>{load();updateSidebarWl();});
 </script>
 </body>
 </html>
