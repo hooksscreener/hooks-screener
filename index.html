@@ -335,18 +335,142 @@ textarea{resize:vertical;min-height:56px}
 <!-- ══ SETTINGS ══ -->
 <div class="tab-panel" id="tab-settings">
   <div class="sec-head" style="color:var(--pink);margin-bottom:14px">Settings</div>
+
+  <!-- Auto-Trading Toggle -->
+  <div class="config" style="border-color:rgba(255,110,199,.3)">
+    <div class="field-label" style="color:var(--pink)">🤖 Auto-Trading (Robinhood Agentic)</div>
+    <div class="sms-note">Controls whether the screener executes trades automatically in your Robinhood Agentic account. Start with Dry Run for at least 2 weeks before going Live.</div>
+    <div style="display:flex;align-items:center;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+      <!-- Vertical toggle group -->
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="auto-trade-opt" id="at-off" onclick="setAutoTrade('off')" style="background:var(--pinkdim);border:2px solid var(--pink);border-radius:8px;padding:10px 16px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--pink);font-weight:700;text-align:center;min-width:120px">
+          ■ OFF
+        </div>
+        <div class="auto-trade-opt" id="at-dry" onclick="setAutoTrade('dry')" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--mid);text-align:center;min-width:120px">
+          ◎ DRY RUN
+        </div>
+        <div class="auto-trade-opt" id="at-live" onclick="setAutoTrade('live')" style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 16px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--dim);text-align:center;min-width:120px">
+          🔴 LIVE
+        </div>
+      </div>
+      <!-- Mode descriptions -->
+      <div style="flex:1;min-width:200px">
+        <div id="at-desc-off" style="font-size:11px;color:var(--mid);line-height:1.6">
+          <strong style="color:var(--text)">OFF —</strong> Screener finds stocks and notifies you. Nothing executes automatically. You decide manually via Claude Desktop.
+        </div>
+        <div id="at-desc-dry" style="font-size:11px;color:var(--mid);line-height:1.6;display:none">
+          <strong style="color:var(--text)">DRY RUN —</strong> Screener runs as if trading. Sends "Would have bought X shares of GOOGL at $342" notifications. No real money moves. Run for at least 2 weeks before going Live.
+        </div>
+        <div id="at-desc-live" style="font-size:11px;color:var(--mid);line-height:1.6;display:none">
+          <strong style="color:var(--red)">LIVE —</strong> Real trades execute automatically within your safety rules. You receive a push notification after each execution. Requires Robinhood API credentials below.
+        </div>
+      </div>
+    </div>
+    <!-- Live mode unlock warning -->
+    <div id="at-live-warning" style="display:none;background:var(--reddim);border:1px solid rgba(201,95,106,.4);border-radius:7px;padding:10px 14px;font-family:var(--mono);font-size:10px;color:var(--red);margin-bottom:12px">
+      ⚠ LIVE mode requires a minimum 14-day dry run period. Complete dry run first to unlock.
+    </div>
+    <!-- Manage existing / deploy cash toggles -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text);font-weight:600">Manage existing positions</div>
+          <button onclick="toggleFlag('manageExisting')" id="flag-manageExisting" style="background:var(--greendim);border:1px solid var(--green);border-radius:20px;padding:2px 10px;font-family:var(--mono);font-size:9px;color:var(--green);cursor:pointer">ON</button>
+        </div>
+        <div style="font-size:9px;color:var(--dim);line-height:1.4">Auto-sell positions when exit triggers fire. Proceeds stay as cash.</div>
+      </div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:7px;padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text);font-weight:600">Deploy idle cash</div>
+          <button onclick="toggleFlag('deployCash')" id="flag-deployCash" style="background:var(--reddim);border:1px solid var(--red);border-radius:20px;padding:2px 10px;font-family:var(--mono);font-size:9px;color:var(--red);cursor:pointer">OFF</button>
+        </div>
+        <div style="font-size:9px;color:var(--dim);line-height:1.4">Allow system to buy new positions using idle cash. OFF = entries manual only.</div>
+      </div>
+    </div>
+    <!-- Robinhood credentials -->
+    <div class="field-label">Robinhood API Token (for Live mode)</div>
+    <div class="sms-note">Your Robinhood OAuth token for the Agentic account. Get from Robinhood Developer settings. Stored encrypted in Vercel — never in your browser.</div>
+    <input type="password" id="rhToken" placeholder="Robinhood API token…" oninput="saveRhToken()">
+    <div class="sms-row">
+      <div>
+        <div class="field-label">Original Deposit Amount ($)</div>
+        <input type="number" id="originalDeposit" placeholder="e.g. 5000" oninput="saveDeposit()" style="margin-bottom:4px">
+        <div style="font-size:9px;color:var(--dim);margin-bottom:12px" id="cashFloorDisplay">Cash floor: —</div>
+      </div>
+      <div>
+        <div class="field-label">Max position size (% of account)</div>
+        <input type="number" id="maxPositionPct" value="5" min="1" max="20" oninput="saveRules()">
+      </div>
+    </div>
+    <!-- Safety rules display -->
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:7px;padding:10px 14px;font-family:var(--mono);font-size:9px;color:var(--dim);line-height:1.8">
+      <div style="color:var(--mid);margin-bottom:4px;letter-spacing:2px;text-transform:uppercase;font-size:8px">Hard-coded safety rules (always active)</div>
+      🛡 Cash floor = 25% of original deposit (if 25% > $750)<br>
+      🛡 Max 2 auto-trades per day<br>
+      🛡 Max 4 positions per sector<br>
+      🛡 No trading 9:30–10:00 AM ET (volatile open)<br>
+      🛡 No trading within 2 days of earnings<br>
+      🛡 2-week dry run required before Live unlocks
+    </div>
+  </div>
+
+  <!-- Scan Filters -->
   <div class="config">
-    <div class="field-label">🔔 Push Notifications (daily 9AM ET alerts — free, no app needed)</div>
-    <div class="sms-note">Get notified when stocks qualify each morning before the market opens. Click Enable in your browser when prompted.</div>
+    <div class="field-label">🔍 Daily Scan Filters</div>
+    <div class="sms-note">Applied before Phase 1 runs. Narrows the universe to stocks matching your criteria. Leave as "All" to scan everything.</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <div class="field-label">Market Cap</div>
+        <select id="filterMarketCap" onchange="saveFilters()" style="margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:100%">
+          <option value="all">All sizes</option>
+          <option value="large">Large cap (&gt;$10B)</option>
+          <option value="mid">Mid cap ($2B–$10B)</option>
+          <option value="small">Small cap ($300M–$2B)</option>
+        </select>
+      </div>
+      <div>
+        <div class="field-label">Sector</div>
+        <select id="filterSector" onchange="saveFilters()" style="margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:100%">
+          <option value="all">All sectors</option>
+          <option value="Technology">Technology</option>
+          <option value="Healthcare">Healthcare</option>
+          <option value="Financials">Financials</option>
+          <option value="Energy">Energy</option>
+          <option value="Industrials">Industrials</option>
+          <option value="Consumer Discretionary">Consumer Discretionary</option>
+          <option value="Consumer Staples">Consumer Staples</option>
+          <option value="Communication Services">Communication Services</option>
+          <option value="Materials">Materials</option>
+          <option value="Real Estate">Real Estate</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Semiconductors">Semiconductors</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-label">Minimum shares outstanding</div>
+    <select id="filterShares" onchange="saveFilters()" style="margin-bottom:12px;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:100%">
+      <option value="0">No minimum</option>
+      <option value="10" selected>10M+ shares (filters micro-caps)</option>
+      <option value="50">50M+ shares (liquid only)</option>
+      <option value="100">100M+ shares (large only)</option>
+    </select>
+  </div>
+
+  <!-- Push Notifications -->
+  <div class="config">
+    <div class="field-label">🔔 Push Notifications</div>
+    <div class="sms-note">Get notified at 9AM ET when stocks qualify. One permission prompt — works from your home screen on iPhone (add site to home screen first).</div>
     <button class="run-btn" onclick="requestNotifPermission()" style="margin-bottom:8px">🔔 Enable Browser Notifications</button>
     <div id="notifStatusDisplay" style="font-family:var(--mono);font-size:10px;color:var(--mid);margin-bottom:12px"></div>
   </div>
+
+  <!-- SMS Alerts -->
   <div class="config">
-    <div class="field-label">📱 SMS Sell Alerts (via Twilio)</div>
-    <div class="sms-note">Get a text when any held position hits a sell trigger. Free trial at <a href="https://twilio.com" target="_blank" style="color:var(--blue)">twilio.com</a></div>
+    <div class="field-label">📱 SMS Alerts (via Twilio — hard exits only)</div>
+    <div class="sms-note">Texts you only for hard exit signals (ROCE decay, D/E spike, 200SMA break). Free trial at <a href="https://twilio.com" target="_blank" style="color:var(--blue)">twilio.com</a></div>
     <div class="sms-row">
-      <div><div class="field-label">Twilio Account SID</div><input type="password" id="twilioSid" placeholder="ACxxxxxxxx…" oninput="saveSms()"></div>
-      <div><div class="field-label">Twilio Auth Token</div><input type="password" id="twilioToken" placeholder="Auth token…" oninput="saveSms()"></div>
+      <div><div class="field-label">Account SID</div><input type="password" id="twilioSid" placeholder="ACxxxxxxxx…" oninput="saveSms()"></div>
+      <div><div class="field-label">Auth Token</div><input type="password" id="twilioToken" placeholder="Auth token…" oninput="saveSms()"></div>
     </div>
     <div class="sms-row">
       <div><div class="field-label">Twilio Number (from)</div><input type="text" id="twilioFrom" placeholder="+1234567890" oninput="saveSms()"></div>
@@ -355,14 +479,17 @@ textarea{resize:vertical;min-height:56px}
     <button class="run-btn" onclick="testSms()" style="margin-bottom:8px">📱 Send Test SMS</button>
     <div class="sms-status" id="smsStatus"></div>
   </div>
+
+  <!-- Exit Monitoring -->
   <div class="config">
-    <div class="field-label">📋 Positions to Monitor for Exit Signals</div>
-    <div class="sms-note">Stocks you currently hold. Checked for sell triggers: RSI overbought, MACD turning negative, 200SMA break.</div>
+    <div class="field-label">📋 Positions to Monitor (supplements watchlist)</div>
+    <div class="sms-note">Additional stocks to check for exit signals beyond your watchlist. Your watchlist is always checked automatically.</div>
     <textarea id="positions" placeholder="e.g. TSM, COST, NVDA" oninput="savePositions()"></textarea>
     <button class="run-btn" onclick="checkExits()" style="margin-top:0">🔍 Check Exit Signals Now</button>
     <div id="exitOut"></div>
   </div>
-  <div style="font-family:var(--mono);font-size:9px;color:var(--dim);text-align:center;margin-top:8px">Settings auto-save to your browser. Keys never leave your device.</div>
+
+  <div style="font-family:var(--mono);font-size:9px;color:var(--dim);text-align:center;margin-top:8px">All settings auto-save. Keys stored in your browser only — never sent to any third party.</div>
 </div>
 
 </div><!-- /main -->
@@ -394,6 +521,90 @@ function saveKey(){localStorage.setItem('fh_key',document.getElementById('apiKey
 function saveFmpKey(){localStorage.setItem('fmp_key',document.getElementById('fmpKey').value);}
 function saveSms(){localStorage.setItem('tw_sid',document.getElementById('twilioSid').value);localStorage.setItem('tw_tok',document.getElementById('twilioToken').value);localStorage.setItem('tw_frm',document.getElementById('twilioFrom').value);localStorage.setItem('tw_to',document.getElementById('twilioTo').value);}
 function savePositions(){localStorage.setItem('positions',document.getElementById('positions').value);}
+function saveRhToken(){localStorage.setItem('rh_token',document.getElementById('rhToken').value);}
+function saveDeposit(){
+  const val=parseFloat(document.getElementById('originalDeposit').value)||0;
+  localStorage.setItem('original_deposit',val);
+  const floor=val*0.25>750?+(val*0.25).toFixed(0):0;
+  document.getElementById('cashFloorDisplay').textContent=floor>0?`Cash floor: $${floor} (25% of $${val.toFixed(0)})`:`Cash floor: None — 25% = $${(val*0.25).toFixed(0)} which is under $750, so all cash can be deployed`;
+}
+function saveRules(){localStorage.setItem('max_pos_pct',document.getElementById('maxPositionPct').value);}
+function saveFilters(){
+  localStorage.setItem('filter_marketcap',document.getElementById('filterMarketCap').value);
+  localStorage.setItem('filter_sector',document.getElementById('filterSector').value);
+  localStorage.setItem('filter_shares',document.getElementById('filterShares').value);
+}
+// ── Auto-trading toggle ───────────────────────────────────────
+let autoTradeMode=localStorage.getItem('auto_trade_mode')||'off';
+function setAutoTrade(mode){
+  if(mode==='live'){
+    const start=localStorage.getItem('dry_run_start');
+    const warn=document.getElementById('at-live-warning');
+    if(!start){warn.textContent='⚠ Start Dry Run first for at least 14 days before going Live.';warn.style.display='block';return;}
+    const days=(Date.now()-parseInt(start))/(864e5);
+    if(days<14){warn.textContent=`⚠ Live requires 14-day dry run. ${Math.floor(days)} days done, ${14-Math.floor(days)} more needed.`;warn.style.display='block';return;}
+    warn.style.display='none';
+  }
+  if(mode==='dry'&&autoTradeMode!=='dry'&&!localStorage.getItem('dry_run_start'))localStorage.setItem('dry_run_start',Date.now());
+  autoTradeMode=mode;localStorage.setItem('auto_trade_mode',mode);
+  updateAutoTradeUI();
+}
+function updateAutoTradeUI(){
+  const cfg={off:['var(--pinkdim)','var(--pink)'],dry:['var(--orangedim)','var(--orange)'],live:['var(--reddim)','var(--red)']};
+  ['off','dry','live'].forEach(m=>{
+    const el=document.getElementById(`at-${m}`),desc=document.getElementById(`at-desc-${m}`);
+    if(m===autoTradeMode){el.style.background=cfg[m][0];el.style.borderColor=cfg[m][1];el.style.color=cfg[m][1];el.style.borderWidth='2px';if(desc)desc.style.display='block';}
+    else{el.style.background='var(--card)';el.style.borderColor='var(--border)';el.style.color='var(--dim)';el.style.borderWidth='1px';if(desc)desc.style.display='none';}
+  });
+}
+// ── Manage/deploy flags ───────────────────────────────────────
+const flags={manageExisting:localStorage.getItem('flag_manageExisting')!=='false',deployCash:localStorage.getItem('flag_deployCash')==='true'};
+function toggleFlag(name){
+  flags[name]=!flags[name];localStorage.setItem(`flag_${name}`,flags[name]);
+  const btn=document.getElementById(`flag-${name}`);
+  if(flags[name]){btn.textContent='ON';btn.style.background='var(--greendim)';btn.style.borderColor='var(--green)';btn.style.color='var(--green)';}
+  else{btn.textContent='OFF';btn.style.background='var(--reddim)';btn.style.borderColor='var(--red)';btn.style.color='var(--red)';}
+}
+function initFlagUI(){['manageExisting','deployCash'].forEach(name=>{const btn=document.getElementById(`flag-${name}`);if(!btn)return;if(flags[name]){btn.textContent='ON';btn.style.background='var(--greendim)';btn.style.borderColor='var(--green)';btn.style.color='var(--green)';}else{btn.textContent='OFF';btn.style.background='var(--reddim)';btn.style.borderColor='var(--red)';btn.style.color='var(--red)';}});}
+// ── Filters ───────────────────────────────────────────────────
+function passesFilters(profile,metric){
+  const mc=localStorage.getItem('filter_marketcap')||'all';
+  const sec=localStorage.getItem('filter_sector')||'all';
+  const sh=parseFloat(localStorage.getItem('filter_shares')||'10');
+  const m=metric?.metric||{};
+  if(mc!=='all'&&m.marketCapitalization){
+    const cap=m.marketCapitalization;
+    if(mc==='large'&&cap<10000)return false;
+    if(mc==='mid'&&(cap<2000||cap>10000))return false;
+    if(mc==='small'&&(cap<300||cap>2000))return false;
+  }
+  if(sec!=='all'&&profile?.finnhubIndustry&&!profile.finnhubIndustry.toLowerCase().includes(sec.toLowerCase()))return false;
+  if(sh>0&&m.sharesOutstandingTTM&&m.sharesOutstandingTTM<sh)return false;
+  return true;
+}
+// ── Auto-trade execution ──────────────────────────────────────
+async function executeAutoTrade(r){
+  const mode=localStorage.getItem('auto_trade_mode')||'off';
+  if(mode==='off'||!flags.deployCash)return;
+  const price=r.q?.c;if(!price)return;
+  const deposit=parseFloat(localStorage.getItem('original_deposit')||'0');
+  const maxPct=parseFloat(localStorage.getItem('max_pos_pct')||'5')/100;
+  const shares=Math.floor(deposit*maxPct/price);if(shares<1)return;
+  if(mode==='dry'){
+    sendLocalNotif(`📊 DRY RUN: ${r.sym}`,`Would buy ${shares} shares @ $${price.toFixed(2)} · $${(shares*price).toFixed(2)} total`);
+    return;
+  }
+  // Live — requires /api/trade.js serverless function + Robinhood OAuth
+  const rhToken=localStorage.getItem('rh_token');
+  if(!rhToken){sendLocalNotif('❌ Live Trade Failed',`No Robinhood token configured — add in Settings`);return;}
+  try{
+    const resp=await fetch('/api/trade',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({symbol:r.sym,shares,side:'buy',token:rhToken,maxPct,deposit})});
+    const d=await resp.json();
+    if(d.success)sendLocalNotif(`✅ Bought: ${r.sym}`,`${shares} shares @ $${price.toFixed(2)}`);
+    else sendLocalNotif(`❌ Trade Failed: ${r.sym}`,d.error||'Check Robinhood credentials');
+  }catch(e){sendLocalNotif(`❌ Trade Error: ${r.sym}`,e.message);}
+}
 // ══ PUSH NOTIFICATIONS ═══════════════════════════════════════
 function checkNotifStatus(){
   const bar=document.getElementById('notifBar');
@@ -460,7 +671,20 @@ function getSymbols(){
   return [];
 }
 // ══ DATA ════════════════════════════════════════════════════
-async function fh(path,key){const r=await fetch(`https://finnhub.io/api/v1${path}&token=${key}`);return r.json();}
+// ── Finnhub API caller ───────────────────────────────────────
+// Uses /api/scan serverless proxy if available (key server-side)
+// Falls back to direct browser call with user-provided key
+async function fh(path,key){
+  try{
+    // Try proxy first (key stored server-side in Vercel env vars)
+    const proxyUrl=`/api/scan?path=${encodeURIComponent(path.split('?')[0])}&${path.includes('?')?path.split('?')[1]:''}`;
+    const proxyR=await fetch(proxyUrl);
+    if(proxyR.ok){const d=await proxyR.json();if(!d.error)return d;}
+  }catch{}
+  // Fall back to direct call with user-provided key
+  const r=await fetch(`https://finnhub.io/api/v1${path}&token=${key}`);
+  return r.json();
+}
 async function getHistory(sym,days=365){
   try{
     const end=Math.floor(Date.now()/1000),start=end-days*24*60*60;
@@ -594,17 +818,45 @@ function calcTech(cls){
   const ema=(d,p)=>{const k=2/(p+1);let v=d[0],o=[v];for(let i=1;i<d.length;i++){v=d[i]*k+v*(1-k);o.push(v);}return o;};
   const e12=ema(cls,12),e26=ema(cls,26),ml=e12.map((v,i)=>v-e26[i]),sl=ema(ml,9);
   const mh=ml[n-1]-sl[n-1],mhp=n>2?ml[n-2]-sl[n-2]:0;
-  return{cur,s100,s200,h52,s200up:s200&&s200p?s200>s200p:null,draw:+draw.toFixed(1),mom:mom!==null?+mom.toFixed(1):null,rsi:+rsi.toFixed(1),rsiCross:rsi>=SPEC.rsiPivot,rsiOB:rsi>=SPEC.rsiOB,macdH:+mh.toFixed(4),macdCross:mhp<0&&mh>=0,macdNeg:mh<0&&mhp>=0,nearS100:s100?Math.abs((cur-s100)/s100*100)<=3:false,nearS200:s200?Math.abs((cur-s200)/s200*100)<=3:false};
+  // ── Fix 3: Consecutive closes below 200SMA (exit trigger needs 5 days) ──
+  let daysBelow200=0;
+  if(s200!==null){
+    for(let i=n-1;i>=Math.max(0,n-5);i--){
+      const s=sma(Math.min(200,i+1),i);
+      if(s!==null&&cls[i]<s)daysBelow200++;else break;
+    }
+  }
+  return{cur,s100,s200,h52,s200up:s200&&s200p?s200>s200p:null,draw:+draw.toFixed(1),mom:mom!==null?+mom.toFixed(1):null,rsi:+rsi.toFixed(1),rsiCross:rsi>=SPEC.rsiPivot,rsiOB:rsi>=SPEC.rsiOB,macdH:+mh.toFixed(4),macdCross:mhp<0&&mh>=0,macdNeg:mh<0&&mhp>=0,nearS100:s100?Math.abs((cur-s100)/s100*100)<=3:false,nearS200:s200?Math.abs((cur-s200)/s200*100)<=3:false,daysBelow200};
 }
 // ══ PHASE EVALUATORS ════════════════════════════════════════
 function evalV(m){
   const mt=m?.metric||{};
-  // Phase 1 pre-filter: if no data at all, skip
-  const r=mt.roeTTM||mt.roeRfy||null;
-  const f=mt.freeCashFlowPerShareTTM&&mt.lastClosePrice&&mt.lastClosePrice>0?mt.freeCashFlowPerShareTTM/mt.lastClosePrice*100:null;
+
+  // ── Fix 1: True ROCE = Operating Profit / Capital Employed ──
+  // Capital Employed = Total Equity + Long-term Debt (non-current liabilities proxy)
+  const opProfit=mt.operatingProfitTTM||mt.ebitTTM||null;
+  const totalEquity=mt.totalEquityAnnual||mt.bookValueShareAnnual*mt.sharesOutstandingTTM||null;
+  const longTermDebt=mt.longTermDebtAnnual||mt.totalDebtAnnual||null;
+  const capitalEmployed=(totalEquity!==null&&longTermDebt!==null)?totalEquity+longTermDebt:null;
+  const roce=capitalEmployed&&capitalEmployed>0&&opProfit!==null?opProfit/capitalEmployed*100:mt.roeTTM||mt.roeRfy||null;
+  // Flag whether we got true ROCE or fell back to ROE proxy
+  const roceIsTrue=capitalEmployed!==null&&opProfit!==null&&capitalEmployed>0;
+
+  // ── Fix 2: FCF yield = Total FCF / Market Cap ──
+  const fcfTotal=mt.freeCashFlowTTM||null;
+  const marketCap=mt.marketCapitalization||null;
+  // Fallback to per-share method if total FCF or market cap not available
+  const fcf=fcfTotal&&marketCap&&marketCap>0
+    ?fcfTotal/marketCap*100
+    :mt.freeCashFlowPerShareTTM&&mt.lastClosePrice&&mt.lastClosePrice>0
+      ?mt.freeCashFlowPerShareTTM/mt.lastClosePrice*100
+      :null;
+
   const d=mt['totalDebt/totalEquityAnnual']||mt['totalDebt/totalEquityQuarterly']||null;
-  const pR=r!==null&&r>=SPEC.roce,pF=f!==null&&f>=SPEC.fcf,pD=d!==null&&d<SPEC.de;
-  return{roce:r,fcf:f?+f.toFixed(1):null,de:d,pe:mt.peTTM||null,pR,pF,pD,passed:pR||pF||pD,hasData:r!==null||f!==null||d!==null};
+  const pR=roce!==null&&roce>=SPEC.roce;
+  const pF=fcf!==null&&fcf>=SPEC.fcf;
+  const pD=d!==null&&d<SPEC.de;
+  return{roce:roce?+roce.toFixed(1):null,roceIsTrue,fcf:fcf?+fcf.toFixed(1):null,de:d,pe:mt.peTTM||null,pR,pF,pD,passed:pR||pF||pD,hasData:roce!==null||fcf!==null||d!==null};
 }
 function evalT(t){if(!t)return{passed:false,up:null,mom:null};return{up:t.s200up,mom:t.mom,passed:t.s200up===true};}
 function evalD(t){
@@ -623,6 +875,124 @@ function calcTimingLabel(t,sq){
   if(pts>=2)return{label:'Approaching',score:pts};
   return{label:'Early',score:pts};
 }
+// ══ PRIORITY 4 — DCF CALCULATOR ═════════════════════════════
+async function calcDCF(sym,metric){
+  // DCF = sum of discounted FCF over 5 years + terminal value
+  // Growth rate informed by ROCE — higher ROCE = higher justified growth
+  const m=metric?.metric||{};
+  const fcfTotal=m.freeCashFlowTTM||null;
+  const marketCap=m.marketCapitalization||null;
+  const shares=m.sharesOutstandingTTM||null;
+  const price=m.lastClosePrice||null;
+  if(!fcfTotal||!marketCap||!shares||!price||fcfTotal<=0)return null;
+  // ROCE-informed growth rate
+  const roce=m.roeTTM||m.roeRfy||0;
+  const g1=roce>=30?0.15:roce>=20?0.12:roce>=15?0.10:0.07; // yr 1-3 growth
+  const g2=0.04; // yr 4-5 growth (slowing)
+  const gTerm=0.03; // terminal growth (GDP-like)
+  const wacc=0.10; // 10% discount rate (standard for quality equity)
+  let fcf=fcfTotal;
+  let pv=0;
+  for(let yr=1;yr<=5;yr++){
+    fcf=fcf*(1+(yr<=3?g1:g2));
+    pv+=fcf/Math.pow(1+wacc,yr);
+  }
+  // Terminal value (Gordon Growth Model)
+  const terminalFCF=fcf*(1+gTerm);
+  const terminalValue=terminalFCF/(wacc-gTerm);
+  const pvTerminal=terminalValue/Math.pow(1+wacc,5);
+  const intrinsicMktCap=(pv+pvTerminal); // in same units as marketCapitalization
+  const intrinsicPerShare=intrinsicMktCap*1e6/shares; // marketCap in millions
+  const margin=(intrinsicPerShare-price)/intrinsicPerShare*100;
+  return{
+    intrinsicPerShare:+intrinsicPerShare.toFixed(2),
+    currentPrice:price,
+    margin:+margin.toFixed(1),
+    undervalued:margin>=15, // pass if 15%+ discount to intrinsic
+    growthRateUsed:(g1*100).toFixed(0)+'%',
+    wacc:(wacc*100).toFixed(0)+'%',
+  };
+}
+
+// ══ PRIORITY 4 — EARNINGS REVISION DIRECTION ════════════════
+async function getEarningsRevision(sym,key){
+  try{
+    const rec=await fh(`/stock/recommendation?symbol=${sym}`,key);
+    if(!Array.isArray(rec)||rec.length<2)return null;
+    // Compare most recent vs previous period buy/sell/hold counts
+    const curr=rec[0],prev=rec[1];
+    const currScore=(curr.buy||0)*2+(curr.hold||0)-(curr.sell||0)*2;
+    const prevScore=(prev.buy||0)*2+(prev.hold||0)-(prev.sell||0)*2;
+    const delta=currScore-prevScore;
+    return{
+      direction:delta>0?'up':delta<0?'down':'flat',
+      delta,
+      currentBuy:curr.buy,currentHold:curr.hold,currentSell:curr.sell,
+      label:delta>2?'Upgrades ↑↑':delta>0?'Slight upgrade ↑':delta<-2?'Downgrades ↓↓':delta<0?'Slight downgrade ↓':'Unchanged →'
+    };
+  }catch{return null;}
+}
+
+// ══ PRIORITY 4 — REVENUE ACCELERATION ══════════════════════
+function calcRevenueAcceleration(metric){
+  const m=metric?.metric||{};
+  // Use quarterly revenue growth rates from Finnhub metrics
+  const q1=m['revenueGrowthQuarterlyYoy']||null;
+  const q4=m['revenueGrowth3Y']||null; // 3-year as proxy for older rate
+  if(q1===null)return null;
+  const accelerating=q4!==null?(q1>q4):null;
+  return{
+    currentQoY:+(q1*100).toFixed(1),
+    trend:accelerating===null?'unknown':accelerating?'Accelerating ↑':'Decelerating ↓',
+    accelerating,
+    label:q1>0.20?'Strong growth':q1>0.10?'Moderate growth':q1>0?'Slow growth':q1===0?'Flat':'Declining',
+  };
+}
+
+// ══ PRIORITY 4 — SECTOR CONCENTRATION CHECK ═════════════════
+function checkSectorConcentration(){
+  const pos=document.getElementById('positions')?.value||'';
+  if(!pos.trim())return null;
+  const held=pos.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
+  const sectorCounts={};
+  held.forEach(sym=>{
+    const r=lastResults[sym];
+    if(r?.pr?.finnhubIndustry){
+      const sec=r.pr.finnhubIndustry;
+      sectorCounts[sec]=(sectorCounts[sec]||0)+1;
+    }
+  });
+  const total=held.length;
+  const warnings=Object.entries(sectorCounts)
+    .filter(([,count])=>count/total>=0.30&&total>=4) // warn if 30%+ in one sector with 4+ positions
+    .map(([sec,count])=>({sector:sec,count,pct:+(count/total*100).toFixed(0)}));
+  return{sectorCounts,total,warnings,hasWarning:warnings.length>0};
+}
+
+// ══ PRIORITY 4 — POSITION SIZING GUIDANCE ═══════════════════
+function calcPositionSizing(r){
+  const deposit=parseFloat(localStorage.getItem('original_deposit')||'0');
+  if(!deposit||deposit<=0)return null;
+  const floor=deposit*0.25>750?deposit*0.25:0;
+  const deployable=deposit-floor;
+  // Base size: 1/15 of deployable (for 15-position portfolio)
+  const baseSize=deployable/15;
+  // Conviction modifier based on timing label
+  const modifier=r.timingLabel==='Confirmed'?1.2:r.timingLabel==='Approaching'?1.0:0.8;
+  // DCF modifier — if significantly undervalued, size up slightly
+  const dcfMod=r.dcf?.undervalued?1.1:1.0;
+  const suggestedDollar=Math.min(baseSize*modifier*dcfMod,deployable*0.08); // never >8% in one trade
+  const price=r.q?.c||0;
+  const suggestedShares=price>0?Math.floor(suggestedDollar/price):0;
+  return{
+    suggestedDollar:+suggestedDollar.toFixed(0),
+    suggestedShares,
+    pctOfDeployable:+(suggestedDollar/deployable*100).toFixed(1),
+    modifier,
+    note:r.timingLabel==='Confirmed'?'Sizing up — entry timing confirmed':r.timingLabel==='Approaching'?'Standard sizing — approaching entry':'Sizing down — entry timing early',
+  };
+}
+
 // ══ MAIN RUN ════════════════════════════════════════════════
 async function run(){
   const key=document.getElementById('apiKey').value.trim();
@@ -645,7 +1015,7 @@ async function run(){
       const [mt,pr]=await Promise.all([fh(`/stock/metric?symbol=${sym}&metric=all`,key),fh(`/stock/profile2?symbol=${sym}`,key)]);
       if(!pr||!pr.ticker){phase1Checked++;continue;}
       const v=evalV(mt);
-      if(v.passed){qualified.push({sym,pr,mt,v});}
+      if(v.passed&&passesFilters(pr,mt)){qualified.push({sym,pr,mt,v});}
       phase1Checked++;
     }catch{}
     await sleep(400);
@@ -672,7 +1042,10 @@ async function run(){
       if(sectorEtf){const sc=await getEtfHistory(sectorEtf,key);rs={sym:sectorEtf,val:calcRS(closes,sc)};}
       // Volume ratio: today vs 20-day average
       const volRatio=calcVolRatio(q,volumes);
-      results.push({sym,pr,q,v,tr,d,t,sq,timing,timingLabel:timing.label,beta,rs,closes,mom:t?.mom??null,dipScore:d.score,volRatio});
+      // Priority 4 additions
+      const[dcf,earningsRev]=await Promise.all([calcDCF(sym,mt),getEarningsRevision(sym,key)]);
+      const revenueAccel=calcRevenueAcceleration(mt);
+      results.push({sym,pr,q,v,tr,d,t,sq,timing,timingLabel:timing.label,beta,rs,closes,mom:t?.mom??null,dipScore:d.score,volRatio,dcf,earningsRev,revenueAccel});
       lastResults[sym]=results[results.length-1];
       updateSidebarWl();
     }catch(e){console.warn(sym,e);}
@@ -685,8 +1058,12 @@ async function run(){
   results.forEach(r=>{const top=mc!==null&&r.mom!==null&&r.mom>=mc;r.tr.top=top;r.tr.passed=r.tr.passed&&top;});
   // Sort by dip score descending (closest to optimal first)
   results.sort((a,b)=>b.dipScore-a.dipScore);
+  // Add position sizing to each result
+  results.forEach(r=>{r.sizing=calcPositionSizing(r);});
   setRunning(false);render();updateSidebarWl();
   notifyTriggers(results.slice(0,5));
+  // Auto-trade qualifying stocks
+  results.forEach(r=>executeAutoTrade(r));
   checkExits();
 }
 let abortFlag=false;
@@ -703,6 +1080,11 @@ function render(){
   const el=document.getElementById('out');
   if(!results.length){el.innerHTML=`<div class="no-trig"><strong style="color:var(--mid);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase">No qualifying stocks found</strong><br><br>No stocks passed all three phases in this scan. The market may be near highs with few healthy dips in range. Try expanding your universe or check back tomorrow.</div>`;return;}
   let h=`<div class="stats"><span>Qualified: <strong>${results.length}</strong></span><span>Universe checked: <strong>${document.getElementById('tickers')?.value?.split(',')?.length||'—'}</strong></span><span>Sorted by: <strong style="color:var(--pink)">Optimal Dip Score ↓</strong></span></div>`;
+  // Sector concentration warning
+  const conc=checkSectorConcentration();
+  if(conc?.hasWarning){
+    h+=conc.warnings.map(w=>`<div style="background:var(--orangedim);border:1px solid rgba(232,146,74,.4);border-radius:7px;padding:10px 14px;margin-bottom:10px;font-family:var(--mono);font-size:10px;color:var(--orange)">⚠ Sector concentration: ${w.count} of ${conc.total} positions (${w.pct}%) in ${w.sector} — consider diversifying</div>`).join('');
+  }
   h+=`<div class="sec-head" style="color:var(--green)">✓ Qualifying Stocks — Passed All 3 Phases</div>`;
   results.forEach(r=>{h+=card(r);});
   el.innerHTML=h;
@@ -773,8 +1155,8 @@ function card(r){
   <div class="detail" id="d-${sym}">
     <div>
       <div class="dt">Phase 1 — Value</div>
-      ${mrow('Return on Capital',v.roce!=null?v.roce.toFixed(1)+'%':'—',v.pR)}
-      ${mrow('FCF Yield',v.fcf!=null?v.fcf+'%':'—',v.pF)}
+      ${mrow(v.roceIsTrue?'ROCE (Operating Profit / Cap. Employed)':'ROE (proxy — true ROCE unavailable)',v.roce!=null?v.roce.toFixed(1)+'%':'—',v.pR)}
+      ${mrow('FCF Yield (Total FCF / Market Cap)',v.fcf!=null?v.fcf+'%':'—',v.pF)}
       ${mrow('Debt Level (D/E)',v.de!=null?v.de.toFixed(2):'—',v.pD)}
       ${mrow('P/E',v.pe!=null?v.pe.toFixed(1):'—',null)}
       <div class="dt" style="margin-top:12px">Phase 3 — Dip</div>
@@ -792,6 +1174,22 @@ function card(r){
       ${mrow('RSI approaching pivot',t?.rsi>35?'Yes':'No',t?.rsi>35)}
       ${mrow('MACD positive',t?.macdH>0?'Yes':'No',t?.macdH>0)}
       ${mrow('MACD just turned +',t?.macdCross?'Yes':'No',t?.macdCross)}
+      ${r.earningsRev?`<div class="dt" style="margin-top:12px">Earnings Revisions</div>
+      ${mrow('Analyst direction',r.earningsRev.label,r.earningsRev.direction==='up')}
+      ${mrow('Buy / Hold / Sell',`${r.earningsRev.currentBuy} / ${r.earningsRev.currentHold} / ${r.earningsRev.currentSell}`,null)}`:''}
+      ${r.revenueAccel?`<div class="dt" style="margin-top:12px">Revenue</div>
+      ${mrow('YoY growth',r.revenueAccel.currentQoY!=null?r.revenueAccel.currentQoY+'%':'—',r.revenueAccel.currentQoY>10)}
+      ${mrow('Trend',r.revenueAccel.trend,r.revenueAccel.accelerating)}`:''}
+      ${r.dcf?`<div class="dt" style="margin-top:12px">DCF Intrinsic Value</div>
+      ${mrow('Intrinsic value / share',r.dcf.intrinsicPerShare!=null?'$'+r.dcf.intrinsicPerShare:'—',r.dcf.undervalued)}
+      ${mrow('Current price','$'+r.dcf.currentPrice?.toFixed(2),null)}
+      ${mrow('Discount to intrinsic',r.dcf.margin!=null?r.dcf.margin+'%':'—',r.dcf.undervalued)}
+      ${mrow('Growth rate used',r.dcf.growthRateUsed,null)}
+      ${mrow('Discount rate (WACC)',r.dcf.wacc,null)}`:''}
+      ${r.sizing?`<div class="dt" style="margin-top:12px">Position Sizing Guidance</div>
+      ${mrow('Suggested size','$'+r.sizing.suggestedDollar+' ('+r.sizing.pctOfDeployable+'% of deployable)',r.sizing.suggestedDollar>0)}
+      ${mrow('Suggested shares',r.sizing.suggestedShares+' shares @ $'+(r.q?.c?.toFixed(2)||'—'),null)}
+      <div style="font-size:9px;color:var(--mid);margin-top:4px;line-height:1.4">${r.sizing.note}</div>`:''}
       <div class="rh-box" onclick="cp('${sym}','${cmd.replace(/'/g,"\\'")}')"><div class="rh-lbl">Copy trade command → Claude Desktop</div>${cmd.slice(0,90)}…<div class="toast" id="t-${sym}">Copied!</div></div>
     </div>
   </div>
@@ -876,7 +1274,14 @@ async function checkExits(){
       // ── Hard exit triggers (fundamental) ──
       if(roce!==null&&roce<12)fires.push({sym,reason:`Return on capital ${roce?.toFixed(1)}% fell below 12% — fundamental decay`,severity:'high',isWl});
       if(de!==null&&de>1.0)fires.push({sym,reason:`D/E ${de?.toFixed(2)} rose above 1.0 — too much debt`,severity:'high',isWl});
-      if(t&&t.s200!==null&&t.cur<t.s200)fires.push({sym,reason:`Price $${t.cur?.toFixed(2)} below 200D SMA $${t.s200?.toFixed(2)} — monitor for 5 consecutive closes`,severity:'medium',isWl});
+      if(t&&t.s200!==null&&t.cur<t.s200){
+        const days=t.daysBelow200||1;
+        if(days>=5){
+          fires.push({sym,reason:`Price closed below 200D SMA for ${days} consecutive days — exit trigger`,severity:'high',isWl});
+        } else {
+          fires.push({sym,reason:`Price below 200D SMA for ${days}/5 days — monitor closely`,severity:'medium',isWl});
+        }
+      }
       // ── Sell timing signals ──
       if(t?.rsiOB)fires.push({sym,reason:`RSI ${t.rsi.toFixed(1)} above 70 — overbought, consider trimming`,severity:'low',isWl});
       if(t?.macdNeg)fires.push({sym,reason:`MACD histogram turned negative — momentum reversing`,severity:'low',isWl});
@@ -914,7 +1319,15 @@ async function testSms(){const st=document.getElementById('smsStatus');st.classN
 function err(msg){const e=document.getElementById('errBox');e.textContent=msg;e.classList.add('on');}
 function clearErr(){document.getElementById('errBox').classList.remove('on');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-window.addEventListener('load',()=>{load();updateSidebarWl();});
+window.addEventListener('load',()=>{load();updateSidebarWl();updateAutoTradeUI();initFlagUI();
+  // Restore filters
+  const mc=localStorage.getItem('filter_marketcap');if(mc&&document.getElementById('filterMarketCap'))document.getElementById('filterMarketCap').value=mc;
+  const sec=localStorage.getItem('filter_sector');if(sec&&document.getElementById('filterSector'))document.getElementById('filterSector').value=sec;
+  const sh=localStorage.getItem('filter_shares');if(sh&&document.getElementById('filterShares'))document.getElementById('filterShares').value=sh;
+  const dep=localStorage.getItem('original_deposit');if(dep&&document.getElementById('originalDeposit')){document.getElementById('originalDeposit').value=dep;saveDeposit();}
+  const mxp=localStorage.getItem('max_pos_pct');if(mxp&&document.getElementById('maxPositionPct'))document.getElementById('maxPositionPct').value=mxp;
+  const rht=localStorage.getItem('rh_token');if(rht&&document.getElementById('rhToken'))document.getElementById('rhToken').value=rht;
+});
 </script>
 </body>
 </html>
