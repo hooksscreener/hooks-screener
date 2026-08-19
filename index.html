@@ -119,9 +119,10 @@ textarea{resize:vertical;min-height:56px}
 .dip-info-btn:hover .dip-tooltip{display:block}
 .chips{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .chip{display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;font-family:var(--mono);font-size:9px;letter-spacing:.5px}
-.chip.pass{background:rgba(77,186,135,.15);border:1px solid rgba(77,186,135,.3);color:var(--green)}
+.chip.pass{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.4);color:#00ff88;animation:chipGlow 2.5s ease-in-out infinite}
 .chip.fail{background:rgba(201,95,106,.12);border:1px solid rgba(201,95,106,.25);color:var(--red)}
 .chip-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+@keyframes chipGlow{0%,100%{box-shadow:0 0 0px rgba(0,255,136,0)}50%{box-shadow:0 0 8px rgba(0,255,136,0.35)}}
 .add-wl-btn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-size:9px;padding:3px 8px;cursor:pointer;font-family:var(--mono);margin-left:auto;white-space:nowrap}
 .add-wl-btn:hover{border-color:var(--blue);color:var(--blue)}
 .add-wl-btn.watching{border-color:var(--pink);color:var(--pink)}
@@ -129,12 +130,20 @@ textarea{resize:vertical;min-height:56px}
 .timing-panel{border-top:1px solid var(--border);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .timing-label{font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
 .timing-signals{display:flex;gap:12px;flex-wrap:wrap}
-.timing-sig{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10px}
-.timing-sig-dot{width:7px;height:7px;border-radius:50%}
-.timing-sig-dot.bull{background:var(--green)}.timing-sig-dot.bear{background:var(--red)}.timing-sig-dot.neut{background:var(--mid)}
-.timing-sig-dot.squeeze-on{background:var(--blue)}.timing-sig-dot.squeeze-off{background:var(--green)}.timing-sig-dot.squeeze-bear{background:var(--red)}
+.timing-sig{display:flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;position:relative;cursor:default}
+.timing-sig-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.timing-sig-dot.bull{background:#00ff88;box-shadow:0 0 6px #00ff88}
+.timing-sig-dot.bear{background:#ff2244;box-shadow:0 0 6px #ff2244}
+.timing-sig-dot.neut{background:#5050aa;box-shadow:0 0 4px #5050aa}
+.timing-sig-dot.squeeze-on{background:#00aaff;box-shadow:0 0 8px #00aaff}
+.timing-sig-dot.squeeze-off{background:#00ff88;box-shadow:0 0 8px #00ff88}
+.timing-sig-dot.squeeze-bear{background:#ff2244;box-shadow:0 0 8px #ff2244}
+.timing-sig-dot.squeeze-gray{background:#444466;box-shadow:none}
+/* Tooltip on hover for indicators */
+.sig-tooltip{position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:#0d0d20;border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-family:var(--mono);font-size:9px;color:var(--text);white-space:nowrap;margin-bottom:4px;display:none;z-index:70;pointer-events:none;line-height:1.5}
+.timing-sig:hover .sig-tooltip{display:block}
 .timing-score{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px}
-.timing-score.confirmed{background:rgba(77,186,135,.15);color:var(--green);border:1px solid rgba(77,186,135,.3)}
+.timing-score.confirmed{background:rgba(0,255,136,.12);color:#00ff88;border:1px solid rgba(0,255,136,.4)}
 .timing-score.approaching{background:rgba(232,146,74,.15);color:var(--orange);border:1px solid rgba(232,146,74,.3)}
 .timing-score.early{background:rgba(100,100,160,.1);color:var(--mid);border:1px solid rgba(100,100,160,.2)}
 /* Exit timing panel */
@@ -405,10 +414,19 @@ function sendLocalNotif(title,body){
   if(Notification.permission==='granted') new Notification(title,{body,icon:'/favicon.ico'});
 }
 function notifyTriggers(stocks){
-  if(!notifGranted||!stocks.length) return;
+  if(!notifGranted) return;
+  // Notify qualifying stocks
   stocks.slice(0,3).forEach(r=>{
     const phases=[r.v.passed,r.tr.passed,r.d.passed].filter(Boolean).length;
     sendLocalNotif(`Hooks Screener: ${r.sym}`,`${phases} phases passed · ${r.d.draw}% off high · Entry: ${r.timingLabel||'—'}`);
+  });
+  // Notify watchlist stocks with their TTM status
+  watchlist.forEach(sym=>{
+    const r=lastResults[sym];
+    if(!r||!r.sq) return;
+    const sqLabel=r.sq.statusLabel||'No Squeeze';
+    const sqColor=r.sq.status==='blue'?'🔵':r.sq.status==='green'?'🟢':r.sq.status==='red'?'🔴':'⚫';
+    sendLocalNotif(`Hooks Screener: ${sym}`,`${sqColor} ${sqLabel} · RSI ${r.t?.rsi??'—'} · ${r.d.draw}% off high`);
   });
 }
 // ══ TABS ════════════════════════════════════════════════════
@@ -543,9 +561,9 @@ function calcTTMSqueeze(closes){
   }
   // Status
   let status='gray',statusLabel='No Squeeze';
-  if(squeezeOn){status='blue';statusLabel='Squeeze ON';}
-  else if(momentumPos){status='green';statusLabel='Released ↑';}
-  else{status='red';statusLabel='Released ↓';}
+  if(squeezeOn){status='blue';statusLabel='TTM Squeeze (Coiling)';}
+  else if(momentumPos){status='green';statusLabel='TTM Squeeze (Bullish)';}
+  else{status='red';statusLabel='TTM Squeeze (Bearish)';}
   return{squeezeOn,status,statusLabel,duration,bbWidth:parseFloat(bbWidth.toFixed(1)),bbWidthPctile:pctile,kcWidth:parseFloat(kcWidth.toFixed(1)),compression,momentumPos};
 }
 // ══ VOLUME RATIO ════════════════════════════════════════════
@@ -736,7 +754,7 @@ function card(r){
         <div class="dip-score-wrap">
           <div class="chip pass"><div class="chip-dot"></div>Dip</div>
           <div class="dip-score-bar"><div class="dip-score-fill" style="width:${dipPct}%"></div></div>
-          <div class="dip-info-btn">ⓘ<div class="dip-tooltip">${d.draw}% off 52w high${sq?sqDot:''}</div></div>
+          <div class="dip-info-btn">ⓘ<div class="dip-tooltip">${d.draw}% down from 52-week high</div></div>
         </div>
         <button class="add-wl-btn ${inWl?'watching':''}" onclick="event.stopPropagation();toggleWl('${sym}')" id="wlbtn-${sym}">${inWl?'★ Watching':'☆ Watch'}</button>
       </div>
@@ -746,9 +764,9 @@ function card(r){
   <div class="timing-panel">
     <span class="timing-label">Entry Timing</span>
     <div class="timing-signals">
-      <div class="timing-sig"><div class="timing-sig-dot ${t?.rsiCross?'bull':t?.rsi>35?'neut':'bear'}"></div>RSI ${t?.rsi??'—'}</div>
-      <div class="timing-sig"><div class="timing-sig-dot ${t?.macdH>0?'bull':t?.macdH>-0.5?'neut':'bear'}"></div>MACD ${t?.macdH!=null?t.macdH.toFixed(3):'—'}</div>
-      ${sq?`<div class="timing-sig"><div class="timing-sig-dot ${sq.status==='green'?'squeeze-off':sq.status==='blue'?'squeeze-on':'squeeze-bear'}"></div>TTM ${sq.statusLabel}</div>`:''}
+      <div class="timing-sig"><div class="timing-sig-dot ${t?.rsiCross?'bull':t?.rsi>35?'neut':'bear'}"></div>RSI ${t?.rsi??'—'}<div class="sig-tooltip">RSI-14 measures recent buying vs selling pressure (0-100).\n&gt;70 = overbought (exit signal) · &lt;40 = oversold (entry signal)\nCurrent: ${t?.rsi??'—'} — ${t?.rsiCross?'✅ Pivot crossed above 40':t?.rsi>35?'Approaching pivot':'Below pivot, still falling'}</div></div>
+      <div class="timing-sig"><div class="timing-sig-dot ${t?.macdH>0?'bull':t?.macdH>-0.5?'neut':'bear'}"></div>MACD ${t?.macdH!=null?t.macdH.toFixed(3):'—'}<div class="sig-tooltip">MACD Histogram: gap between short-term and long-term momentum.\nPositive = upward momentum building · Negative = fading\nCurrent: ${t?.macdH!=null?t.macdH.toFixed(3):'—'} — ${t?.macdH>0?'✅ Positive (bullish)':t?.macdH>-0.5?'Nearly positive':'Negative (bearish)'}</div></div>
+      ${sq?`<div class="timing-sig"><div class="timing-sig-dot ${sq.status==='green'?'squeeze-off':sq.status==='blue'?'squeeze-on':sq.status==='red'?'squeeze-bear':'squeeze-gray'}"></div>${sq.statusLabel}<div class="sig-tooltip">${sq.status==='blue'?'🔵 Volatility compressed — energy coiling. Big move building. Wait for release.':sq.status==='green'?'🟢 Squeeze released upward — bullish breakout in progress. Good entry timing.':sq.status==='red'?'🔴 Squeeze released downward — bearish breakout. Use caution on entry.':'⚫ No squeeze — normal volatility, no compression signal.'}</div></div>`:''}
     </div>
     <div class="timing-score ${timingCls}">${timing.label}</div>
   </div>
@@ -840,30 +858,54 @@ function removeWl(sym){watchlist=watchlist.filter(s=>s!==sym);localStorage.setIt
 // ══ EXIT MONITORING ══════════════════════════════════════════
 async function checkExits(){
   const key=document.getElementById('apiKey').value.trim();if(!key)return;
-  const posStr=document.getElementById('positions').value.trim();if(!posStr)return;
-  const positions=posStr.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
-  const el=document.getElementById('exitOut');el.innerHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-top:10px">Checking exit signals…</div>`;
+  // Combine manually entered positions AND watchlist stocks
+  const posStr=document.getElementById('positions').value.trim();
+  const manualPos=posStr?posStr.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean):[];
+  const allPos=[...new Set([...manualPos,...watchlist])]; // deduplicate
+  if(!allPos.length)return;
+  const el=document.getElementById('exitOut');
+  el.innerHTML=`<div style="font-family:var(--mono);font-size:10px;color:var(--blue);margin-top:10px">Checking exit signals for ${allPos.length} stock(s)…</div>`;
   const fires=[];
-  for(const sym of positions){
+  for(const sym of allPos){
     try{
       const[mt,hist]=await Promise.all([fh(`/stock/metric?symbol=${sym}&metric=all`,key),getHistory(sym)]);
       const m=mt?.metric||{};const cls=hist?.closes||null;const t=calcTech(cls);
+      const sq=cls?calcTTMSqueeze(cls):null;
       const roce=m.roeTTM||m.roeRfy;const de=m['totalDebt/totalEquityAnnual']||m['totalDebt/totalEquityQuarterly'];
-      // Fundamental exits
-      if(roce!==null&&roce<12)fires.push({sym,reason:`Return on capital ${roce?.toFixed(1)}% fell below 12% — fundamental decay`,severity:'high'});
-      if(de!==null&&de>1.0)fires.push({sym,reason:`D/E ${de?.toFixed(2)} above 1.0 — leverage risk`,severity:'high'});
-      if(t&&t.s200!==null&&t.cur<t.s200)fires.push({sym,reason:`Price $${t.cur?.toFixed(2)} below 200D SMA $${t.s200?.toFixed(2)} — monitor for 5-day break`,severity:'medium'});
-      // Overbought exit signals
-      if(t?.rsiOB)fires.push({sym,reason:`RSI ${t.rsi.toFixed(1)} above 70 — overbought, consider trimming`,severity:'low'});
-      if(t?.macdNeg)fires.push({sym,reason:`MACD histogram turned negative — momentum exhausting`,severity:'low'});
+      const isWl=watchlist.includes(sym);
+      // ── Hard exit triggers (fundamental) ──
+      if(roce!==null&&roce<12)fires.push({sym,reason:`Return on capital ${roce?.toFixed(1)}% fell below 12% — fundamental decay`,severity:'high',isWl});
+      if(de!==null&&de>1.0)fires.push({sym,reason:`D/E ${de?.toFixed(2)} rose above 1.0 — too much debt`,severity:'high',isWl});
+      if(t&&t.s200!==null&&t.cur<t.s200)fires.push({sym,reason:`Price $${t.cur?.toFixed(2)} below 200D SMA $${t.s200?.toFixed(2)} — monitor for 5 consecutive closes`,severity:'medium',isWl});
+      // ── Sell timing signals ──
+      if(t?.rsiOB)fires.push({sym,reason:`RSI ${t.rsi.toFixed(1)} above 70 — overbought, consider trimming`,severity:'low',isWl});
+      if(t?.macdNeg)fires.push({sym,reason:`MACD histogram turned negative — momentum reversing`,severity:'low',isWl});
+      if(sq&&sq.status==='red')fires.push({sym,reason:`TTM Squeeze (Bearish) — compressed energy released downward`,severity:'low',isWl});
     }catch{}
     await sleep(500);
   }
+  // ── Display in Settings ──
   if(fires.length){
-    el.innerHTML=fires.map(f=>{const col=f.severity==='high'?'var(--red)':f.severity==='medium'?'var(--orange)':'var(--mid)';return`<div style="background:${f.severity==='high'?'var(--reddim)':'var(--panel)'};border:1px solid ${col}44;border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:${col}">⚠ <strong>${f.sym}</strong> — ${f.reason}</div>`;}).join('');
-    const msg=fires.filter(f=>f.severity==='high').map(f=>`${f.sym}: ${f.reason}`).join('\n');
-    if(msg)await sendSms(`Hooks Screener Exit Alert:\n${msg}`);
-  }else{el.innerHTML=`<div style="background:var(--greendim);border:1px solid rgba(77,186,135,.3);border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--green)">✓ No exit signals — all positions look clean</div>`;}
+    el.innerHTML=`<div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-top:10px;margin-bottom:6px">Exit & Sell Signals</div>`+
+      fires.map(f=>{
+        const col=f.severity==='high'?'var(--red)':f.severity==='medium'?'var(--orange)':'var(--mid)';
+        const bg=f.severity==='high'?'var(--reddim)':'var(--panel)';
+        const wlBadge=f.isWl?'<span style="font-size:8px;color:var(--pink);margin-left:4px">★ WL</span>':'';
+        return`<div style="background:${bg};border:1px solid ${col}44;border-radius:7px;padding:10px 12px;margin-bottom:6px;font-family:var(--mono);font-size:11px;color:${col}">⚠ <strong>${f.sym}</strong>${wlBadge} — ${f.reason}</div>`;
+      }).join('');
+    // ── Push notifications for all signals ──
+    if(notifGranted){
+      fires.forEach(f=>{
+        const icon=f.severity==='high'?'🔴':f.severity==='medium'?'🟡':'🟠';
+        sendLocalNotif(`${icon} ${f.sym} — Exit Signal`,f.reason);
+      });
+    }
+    // ── SMS for hard exits only ──
+    const hardFires=fires.filter(f=>f.severity==='high');
+    if(hardFires.length){const msg=hardFires.map(f=>`${f.sym}: ${f.reason}`).join('\n');await sendSms(`Hooks Screener Exit Alert:\n${msg}`);}
+  }else{
+    el.innerHTML=`<div style="background:var(--greendim);border:1px solid rgba(77,186,135,.3);border-radius:7px;padding:10px 12px;margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--green)">✓ No exit signals — watchlist and positions look clean</div>`;
+  }
 }
 // ══ SMS ══════════════════════════════════════════════════════
 async function sendSms(msg){const sid=document.getElementById('twilioSid').value.trim();const tok=document.getElementById('twilioToken').value.trim();const frm=document.getElementById('twilioFrom').value.trim();const to=document.getElementById('twilioTo').value.trim();if(!sid||!tok||!frm||!to)return false;try{const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{method:'POST',headers:{'Authorization':'Basic '+btoa(sid+':'+tok),'Content-Type':'application/x-www-form-urlencoded'},body:`To=${encodeURIComponent(to)}&From=${encodeURIComponent(frm)}&Body=${encodeURIComponent(msg)}`});return r.ok;}catch{return false;}}
