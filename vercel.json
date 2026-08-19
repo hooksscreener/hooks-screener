@@ -1,0 +1,18 @@
+{
+  "crons": [
+    {
+      "path": "/api/daily-scan",
+      "schedule": "0 14 * * 1-5"
+    }
+  ],
+  "functions": {
+    "api/scan.js": {
+      "memory": 256,
+      "maxDuration": 30
+    },
+    "api/daily-scan.js": {
+      "memory": 512,
+      "maxDuration": 300
+    }
+  }
+}
