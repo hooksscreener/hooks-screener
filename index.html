@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hooks Screener">
+<meta name="theme-color" content="#05050a">
 <title>Hooks Screener</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
@@ -214,17 +218,120 @@ textarea{resize:vertical;min-height:56px}
 .info-rule-label{color:var(--mid);min-width:120px}
 .info-rule-val{color:var(--text);text-align:right;flex:1;padding-left:12px;line-height:1.5}
 @media(max-width:700px){
+  /* Layout */
   .screener-layout{grid-template-columns:1fr}
   .screener-sidebar{display:none}
-  .header-inner{flex-direction:column;gap:8px;align-items:flex-start}
-  .card-row1{grid-template-columns:52px 1fr auto;gap:8px}
-  .ticker{font-size:13px}
-  .detail{grid-template-columns:1fr}
-  .main{padding:12px}
+  .main{padding:10px}
+  .header{padding:10px 14px 8px}
+  .header-inner{flex-direction:row;gap:8px;align-items:center;justify-content:space-between}
+  .eyebrow{display:none}
+  .title{font-size:15px}
+
+  /* Tabs — scrollable row on mobile */
+  .header-tabs{display:flex;gap:3px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0}
+  .header-tabs::-webkit-scrollbar{display:none}
+  .tab-btn{padding:5px 10px;font-size:9px;white-space:nowrap;flex-shrink:0}
+
+  /* Ticker tape — smaller */
+  .tape-item{padding:0 12px;font-size:10px}
+
+  /* ETF grid — 2 columns on mobile */
+  .etf-grid{grid-template-columns:repeat(2,1fr);gap:5px}
+  .etf-card{padding:7px 8px}
+  .etf-sym{font-size:10px}
+  .etf-px{font-size:9px}
+  .etf-chg{font-size:8px}
+  .etf-sparkline{height:22px}
+  .etf-trend{font-size:7px}
+  .etf-controls{gap:3px}
+  .etf-range-btn{padding:2px 5px;font-size:8px}
+
+  /* Universe mode grid — 2 cols */
+  .mode-grid{grid-template-columns:1fr 1fr;gap:5px}
+  .mode-btn{padding:8px 10px}
+  .mode-title{font-size:10px}
+  .mode-desc{font-size:8px}
+
+  /* Config panel */
+  .config{padding:12px}
+  input,textarea{font-size:12px;padding:8px 10px}
+
+  /* Run button — bigger tap target */
+  .run-btn{padding:16px;font-size:12px;letter-spacing:2px;border-radius:10px}
+
+  /* Stock cards */
+  .card-row1{grid-template-columns:54px 1fr auto;gap:7px}
+  .ticker{font-size:14px}
+  .exch{font-size:7px}
+  .co-name{font-size:11px}
+  .co-ind{font-size:8px}
+  .price{font-size:13px}
+  .chg{font-size:9px}
+  .card-top{padding:10px 12px}
+  .card-row2{gap:6px}
+
+  /* Chips — smaller */
+  .chip{padding:2px 6px;font-size:8px}
+  .chip-dot{width:4px;height:4px}
+  .add-wl-btn{font-size:8px;padding:2px 6px}
+
+  /* Beta/RS row */
+  .beta-rs{gap:6px}
+  .beta-label,.beta-val,.rs-label,.rs-val{font-size:9px}
+  .beta-drop-btn{font-size:8px}
+
+  /* Dip score */
+  .dip-score-bar{width:40px}
+
+  /* Timing panel */
+  .timing-panel{padding:8px 12px;gap:6px}
+  .timing-sig{font-size:9px;gap:3px}
+  .timing-sig-dot{width:7px;height:7px}
+  .timing-score{font-size:9px;padding:2px 8px}
+
+  /* Detail panel — single column */
+  .detail{grid-template-columns:1fr;padding:12px}
+  .mrow{font-size:10px}
+  .mval{font-size:10px}
+  .dt{font-size:7px}
+
+  /* TTM Squeeze panel */
+  .squeeze-panel{padding:8px 10px}
+  .squeeze-grid{grid-template-columns:1fr 1fr}
+  .squeeze-row{font-size:9px}
+
+  /* Watchlist */
+  .wl-card{padding:10px 12px}
+  .wl-sym{font-size:13px}
+  .wl-add-row{gap:6px}
+
+  /* Settings */
   .sms-row{grid-template-columns:1fr}
-  .etf-grid{grid-template-columns:repeat(3,1fr)}
   .phase-grid{grid-template-columns:1fr}
-  .mode-grid{grid-template-columns:1fr 1fr}
+  .info-rule-row{flex-direction:column;gap:4px}
+  .info-rule-val{text-align:left;padding-left:0}
+
+  /* Auto-trade toggle — full width */
+  .auto-trade-opt{min-width:100%!important}
+
+  /* Notification bar */
+  .notif-bar{flex-direction:column;gap:8px;text-align:center}
+  .notif-bar-text{font-size:10px}
+
+  /* Progress bar */
+  .progress{font-size:10px}
+
+  /* Section headers */
+  .sec-head{font-size:8px}
+  .stats{font-size:9px;gap:10px}
+}
+
+/* Extra small phones */
+@media(max-width:380px){
+  .mode-grid{grid-template-columns:1fr}
+  .etf-grid{grid-template-columns:repeat(2,1fr)}
+  .header-inner{flex-direction:column;align-items:flex-start;gap:6px}
+  .title{font-size:14px}
 }
 </style>
 </head>
@@ -335,6 +442,13 @@ textarea{resize:vertical;min-height:56px}
 <!-- ══ SETTINGS ══ -->
 <div class="tab-panel" id="tab-settings">
   <div class="sec-head" style="color:var(--pink);margin-bottom:14px">Settings</div>
+
+  <!-- Finnhub Key at top of Settings for easy access -->
+  <div class="config">
+    <div class="field-label">🔑 Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
+    <div class="sms-note">Your key is saved to this browser automatically. Never shared with anyone.</div>
+    <input type="password" id="apiKeySettings" placeholder="Paste your Finnhub key here…" oninput="syncApiKey()">
+  </div>
 
   <!-- Auto-Trading Toggle -->
   <div class="config" style="border-color:rgba(255,110,199,.3)">
@@ -506,7 +620,8 @@ const RUSSELL_SUBSET=["IRDM","BKE","PWP","EVER","ORN","RCAT","AAOI","IONQ","ACHR
 let mode='individual',results=[],watchlist=[],lastResults={},etfData={},etfRange='1D',etfHistories={},notifGranted=false;
 // ══ PERSISTENCE ══════════════════════════════════════════════
 function load(){
-  const k=localStorage.getItem('fh_key'); if(k) document.getElementById('apiKey').value=k;
+  const k=localStorage.getItem('fh_key');
+  if(k){document.getElementById('apiKey').value=k;const sf=document.getElementById('apiKeySettings');if(sf)sf.value=k;}
   const fk=localStorage.getItem('fmp_key'); if(fk) document.getElementById('fmpKey').value=fk;
   const w=localStorage.getItem('wl_v4'); if(w) watchlist=JSON.parse(w);
   const sid=localStorage.getItem('tw_sid'); if(sid) document.getElementById('twilioSid').value=sid;
@@ -517,7 +632,8 @@ function load(){
   updateWlCount();
   checkNotifStatus();
 }
-function saveKey(){localStorage.setItem('fh_key',document.getElementById('apiKey').value);}
+function saveKey(){localStorage.setItem('fh_key',document.getElementById('apiKey').value);const sf=document.getElementById('apiKeySettings');if(sf)sf.value=document.getElementById('apiKey').value;}
+function syncApiKey(){const val=document.getElementById('apiKeySettings').value;localStorage.setItem('fh_key',val);const mf=document.getElementById('apiKey');if(mf)mf.value=val;}
 function saveFmpKey(){localStorage.setItem('fmp_key',document.getElementById('fmpKey').value);}
 function saveSms(){localStorage.setItem('tw_sid',document.getElementById('twilioSid').value);localStorage.setItem('tw_tok',document.getElementById('twilioToken').value);localStorage.setItem('tw_frm',document.getElementById('twilioFrom').value);localStorage.setItem('tw_to',document.getElementById('twilioTo').value);}
 function savePositions(){localStorage.setItem('positions',document.getElementById('positions').value);}
