@@ -730,15 +730,40 @@ function checkNotifStatus(){
   else if(Notification.permission==='denied'){bar.classList.add('hidden');if(disp)disp.textContent='Notifications blocked. Reset in browser settings to enable.';}
   else{if(disp)disp.textContent='Notifications not yet enabled.';}
 }
+async function registerServiceWorker(){
+  if(!('serviceWorker' in navigator))return null;
+  try{const reg=await navigator.serviceWorker.register('/sw.js');console.log('SW registered');return reg;}
+  catch(e){console.warn('SW failed:',e);return null;}
+}
 async function requestNotifPermission(){
   if(!('Notification' in window)){alert('Push notifications are not supported in this browser. Try Chrome or Safari on iOS 16.4+.');return;}
   const perm=await Notification.requestPermission();
   notifGranted=perm==='granted';
   checkNotifStatus();
-  if(perm==='granted') sendLocalNotif('Hooks Screener','Notifications enabled. You will be alerted when stocks qualify.');
+  if(perm==='granted'){
+    await registerServiceWorker();
+    sendLocalNotif('Hooks Screener','✅ Notifications enabled — you\'ll be alerted at 9AM ET when stocks qualify');
+  }
 }
 function sendLocalNotif(title,body){
-  if(Notification.permission==='granted') new Notification(title,{body,icon:'/favicon.ico'});
+  if(Notification.permission==='granted') new Notification(title,{body,icon:'/icon-192.png'});
+}
+// Check if 9AM scan ran today while app was closed
+async function checkDailyScanResults(){
+  if(!notifGranted)return;
+  try{
+    const r=await fetch('/api/daily-scan');
+    if(!r.ok)return;
+    const data=await r.json();
+    if(!data?.date)return;
+    const scanDate=data.date.split('T')[0];
+    const today=new Date().toISOString().split('T')[0];
+    const lastSeen=localStorage.getItem('last_scan_seen');
+    if(scanDate===today&&lastSeen!==scanDate&&data.qualified?.length>0){
+      localStorage.setItem('last_scan_seen',scanDate);
+      sendLocalNotif('Hooks Screener — 9AM Scan',data.message||'Stocks qualified today — open to review');
+    }
+  }catch{}
 }
 function notifyTriggers(stocks){
   if(!notifGranted) return;
@@ -1117,6 +1142,8 @@ async function run(){
   const baseSyms=getSymbols();
   if(!baseSyms.length){err('No tickers to scan.');return;}
   setRunning(true);clearErr();document.getElementById('out').innerHTML='';results=[];
+  // Notify that scan is starting
+  sendLocalNotif('🔍 Hooks Screener','Daily scan starting — checking your universe for qualifying stocks…');
   // ETFs already loaded on page open — only reload if not yet loaded
   if(!Object.keys(etfData).length) loadEtfs(key);
   if(!etfHistories['SPY'])await getHistory('SPY',400).then(h=>{if(h)etfHistories['SPY']=h;});
@@ -1436,23 +1463,25 @@ async function testSms(){const st=document.getElementById('smsStatus');st.classN
 function err(msg){const e=document.getElementById('errBox');e.textContent=msg;e.classList.add('on');}
 function clearErr(){document.getElementById('errBox').classList.remove('on');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-window.addEventListener('load',()=>{
+window.addEventListener('load',async()=>{
   load();updateSidebarWl();updateAutoTradeUI();initFlagUI();
-  // Restore filters
   const mc=localStorage.getItem('filter_marketcap');if(mc&&document.getElementById('filterMarketCap'))document.getElementById('filterMarketCap').value=mc;
   const sec=localStorage.getItem('filter_sector');if(sec&&document.getElementById('filterSector'))document.getElementById('filterSector').value=sec;
   const sh=localStorage.getItem('filter_shares');if(sh&&document.getElementById('filterShares'))document.getElementById('filterShares').value=sh;
   const dep=localStorage.getItem('original_deposit');if(dep&&document.getElementById('originalDeposit')){document.getElementById('originalDeposit').value=dep;saveDeposit();}
   const mxp=localStorage.getItem('max_pos_pct');if(mxp&&document.getElementById('maxPositionPct'))document.getElementById('maxPositionPct').value=mxp;
   const rht=localStorage.getItem('rh_token');if(rht&&document.getElementById('rhToken'))document.getElementById('rhToken').value=rht;
-  // Load ETFs immediately if key already saved — don't wait for Run Screener
+  // Load ETFs immediately if key saved
   const savedKey=localStorage.getItem('fh_key');
   if(savedKey){
     document.getElementById('apiKey').value=savedKey;
     const sf=document.getElementById('apiKeySettings');if(sf)sf.value=savedKey;
-    // Small delay so page renders first, then fetch ETFs in background
     setTimeout(()=>loadEtfs(savedKey),800);
   }
+  // Register service worker for background push
+  if('serviceWorker' in navigator) await registerServiceWorker();
+  // Check if 9AM cron ran today while app was closed
+  setTimeout(checkDailyScanResults, 2000);
 });
 </script>
 </body>
