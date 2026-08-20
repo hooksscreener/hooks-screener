@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Hooks Screener">
@@ -20,21 +20,21 @@
   --mono:'IBM Plex Mono',monospace;--ui:'DM Sans',sans-serif;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--ui);min-height:100vh}
-.tape-wrap{background:#050509;border-bottom:1px solid var(--border);overflow:hidden;height:34px;display:flex;align-items:center}
+.tape-wrap{background:#050509;border-bottom:1px solid var(--border);overflow:hidden;height:calc(34px + env(safe-area-inset-top));display:flex;align-items:flex-end;padding-bottom:4px;padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right)}
 .tape-track{display:flex;gap:0;animation:scroll 45s linear infinite;white-space:nowrap}
 .tape-track:hover{animation-play-state:paused}
 .tape-item{display:flex;align-items:center;gap:6px;padding:0 20px;border-right:1px solid var(--border);font-family:var(--mono);font-size:11px}
 .tape-sym{color:var(--pink);font-weight:700}.tape-px{color:var(--text)}
 .tape-chg.up{color:var(--green)}.tape-chg.dn{color:var(--red)}
 @keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-.header{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 20px 12px;position:sticky;top:0;z-index:100}
+.header{background:var(--panel);border-bottom:1px solid var(--border);padding:14px 20px 12px;position:sticky;top:0;z-index:100;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
 .header-inner{max-width:1000px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;gap:12px}
 .eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:4px;color:var(--pink);text-transform:uppercase;margin-bottom:3px}
 .title{font-size:18px;font-weight:600;color:var(--text);letter-spacing:-0.5px}
 .header-tabs{display:flex;gap:4px;flex-wrap:wrap}
 .tab-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:6px 12px;color:var(--mid);font-family:var(--mono);font-size:10px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;transition:all .15s}
 .tab-btn.active{background:var(--pinkdim);border-color:var(--pink);color:var(--pink)}
-.main{padding:16px;max-width:1000px;margin:0 auto}
+.main{padding:16px;max-width:1000px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:max(16px,env(safe-area-inset-bottom))}
 .tab-panel{display:none}.tab-panel.active{display:block}
 .screener-layout{display:grid;grid-template-columns:1fr 260px;gap:16px;align-items:start}
 .screener-left{min-width:0}
