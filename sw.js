@@ -1,29 +1,17 @@
 /**
  * Hooks Screener — Service Worker
- * Handles background push notifications from the daily cron job
+ * Handles real Web Push notifications from the daily cron job via VAPID
  */
 
-const CACHE_NAME = 'hooks-screener-v1';
+self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil(clients.claim()));
 
-// Install — cache essential files for offline access
-self.addEventListener('install', event => {
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', event => {
-  event.waitUntil(clients.claim());
-});
-
-// Handle push notifications from server
+// Handle incoming push from server
 self.addEventListener('push', event => {
   if (!event.data) return;
-
   let data;
-  try {
-    data = event.data.json();
-  } catch {
-    data = { title: 'Hooks Screener', body: event.data.text() };
-  }
+  try { data = event.data.json(); }
+  catch { data = { title: 'Hooks Screener', body: event.data.text() }; }
 
   const options = {
     body: data.body || '',
@@ -33,7 +21,6 @@ self.addEventListener('push', event => {
     renotify: true,
     requireInteraction: data.requireInteraction || false,
     data: { url: data.url || '/' },
-    actions: data.actions || [],
     vibrate: [200, 100, 200],
   };
 
@@ -42,19 +29,15 @@ self.addEventListener('push', event => {
   );
 });
 
-// Click notification — open the app
+// Tap notification → open app
 self.addEventListener('notificationclick', event => {
   event.notification.close();
   const url = event.notification.data?.url || '/';
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
-      // If app is already open, focus it
-      for (const client of clientList) {
-        if (client.url.includes(self.location.origin) && 'focus' in client) {
-          return client.focus();
-        }
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const c of list) {
+        if (c.url.includes(self.location.origin) && 'focus' in c) return c.focus();
       }
-      // Otherwise open a new window
       if (clients.openWindow) return clients.openWindow(url);
     })
   );
