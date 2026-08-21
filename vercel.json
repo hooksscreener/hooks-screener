@@ -7,12 +7,16 @@
   ],
   "functions": {
     "api/scan.js": {
-      "memory": 256,
       "maxDuration": 30
     },
     "api/daily-scan.js": {
-      "memory": 512,
       "maxDuration": 300
+    },
+    "api/history.js": {
+      "maxDuration": 15
+    },
+    "api/subscribe.js": {
+      "maxDuration": 10
     }
   }
 }
