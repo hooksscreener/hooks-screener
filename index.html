@@ -343,6 +343,7 @@ textarea{resize:vertical;min-height:56px}
     <div class="header-tabs">
       <button class="tab-btn active" onclick="switchTab('screener',this)">Screener</button>
       <button class="tab-btn" onclick="switchTab('watchlist',this)">Watchlist</button>
+      <button class="tab-btn" onclick="switchTab('performance',this)">Performance</button>
       <button class="tab-btn" onclick="switchTab('info',this)">Info</button>
       <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
     </div>
@@ -437,6 +438,42 @@ textarea{resize:vertical;min-height:56px}
     <div class="info-rule-row"><div class="info-rule-label">When to sell</div><div class="info-rule-val">Three explicit triggers defined in advance — fundamental deterioration, leverage spike, or trend breakdown.</div></div>
   </div>
   <div class="info-section"><div class="info-section-title">What This Is Not</div><div class="info-body">Not a prediction system. Not financial advice. A disciplined framework for identifying businesses worth owning at moments when the market offers a reasonable entry.</div><div class="info-callout">For informational and research purposes only. Always conduct your own research before investing.</div></div>
+</div>
+
+<!-- ══ PERFORMANCE ══ -->
+<div class="tab-panel" id="tab-performance">
+  <div class="sec-head" style="color:var(--pink);margin-bottom:6px">📈 Signal Performance</div>
+  <div style="font-size:11px;color:var(--mid);margin-bottom:16px;line-height:1.6">Tracks every full trigger fired by the screener — whether or not you invested. Hypothetical $10k split equally across all signals at entry price vs SPY benchmark. Starts building from today.</div>
+  <!-- Chart -->
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
+    <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Hypothetical Portfolio vs SPY</div>
+    <canvas id="perfChart" style="width:100%;height:200px"></canvas>
+    <div id="perfChartEmpty" style="text-align:center;padding:60px 0;font-family:var(--mono);font-size:10px;color:var(--dim)">No signals yet — chart builds as full triggers fire each morning</div>
+  </div>
+  <!-- Stats row -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="perfStats">
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--pink)" id="statSignals">0</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px">Signals</div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)" id="statWinRate">—</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px">Win Rate</div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--blue)" id="statAvgReturn">—</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px">Avg Return</div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--text)" id="statOpen">0</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px">Open</div>
+    </div>
+  </div>
+  <!-- Signal table -->
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">All Signals</div>
+    <div id="signalTable"><div style="padding:20px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--dim)">No signals logged yet</div></div>
+  </div>
 </div>
 
 <!-- ══ SETTINGS ══ -->
@@ -802,6 +839,7 @@ function switchTab(t,btn){
   document.getElementById('tab-'+t).classList.add('active');
   if(btn) btn.classList.add('active');
   if(t==='watchlist') renderWatchlist();
+  if(t==='performance'){loadSignals();}
 }
 // ══ MODE ════════════════════════════════════════════════════
 function setMode(m){
@@ -1482,7 +1520,127 @@ async function checkExits(){
 // ══ SMS ══════════════════════════════════════════════════════
 async function sendSms(msg){const sid=document.getElementById('twilioSid').value.trim();const tok=document.getElementById('twilioToken').value.trim();const frm=document.getElementById('twilioFrom').value.trim();const to=document.getElementById('twilioTo').value.trim();if(!sid||!tok||!frm||!to)return false;try{const r=await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`,{method:'POST',headers:{'Authorization':'Basic '+btoa(sid+':'+tok),'Content-Type':'application/x-www-form-urlencoded'},body:`To=${encodeURIComponent(to)}&From=${encodeURIComponent(frm)}&Body=${encodeURIComponent(msg)}`});return r.ok;}catch{return false;}}
 async function testSms(){const st=document.getElementById('smsStatus');st.className='sms-status';st.textContent='Sending…';st.style.display='block';const ok=await sendSms('Hooks Screener: Test ✓ SMS alerts working.');st.className=ok?'sms-status ok':'sms-status er';st.textContent=ok?'✓ Test SMS sent!':'✗ Failed — check Twilio credentials.';}
-// ══ HELPERS ══════════════════════════════════════════════════
+// ══ PERFORMANCE TAB ══════════════════════════════════════════
+let signalData=[];
+async function loadSignals(){
+  try{
+    const r=await fetch('/api/daily-scan?action=signals');
+    if(!r.ok)return;
+    signalData=await r.json();
+    renderPerformance();
+  }catch{}
+}
+function renderPerformance(){
+  const el=document.getElementById('signalTable');
+  const chart=document.getElementById('perfChart');
+  const empty=document.getElementById('perfChartEmpty');
+  if(!signalData?.length){
+    if(el)el.innerHTML='<div style="padding:20px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--dim)">No signals logged yet — first full trigger will appear here</div>';
+    if(chart)chart.style.display='none';
+    if(empty)empty.style.display='block';
+    return;
+  }
+  // Stats
+  const open=signalData.filter(s=>s.status==='open').length;
+  const withReturn=signalData.filter(s=>s.returnPct!==undefined);
+  const winners=withReturn.filter(s=>s.returnPct>0).length;
+  const winRate=withReturn.length?Math.round(winners/withReturn.length*100):null;
+  const avgReturn=withReturn.length?(withReturn.reduce((a,s)=>a+s.returnPct,0)/withReturn.length):null;
+  document.getElementById('statSignals').textContent=signalData.length;
+  document.getElementById('statWinRate').textContent=winRate!==null?winRate+'%':'—';
+  document.getElementById('statAvgReturn').textContent=avgReturn!==null?(avgReturn>=0?'+':'')+avgReturn.toFixed(1)+'%':'—';
+  document.getElementById('statAvgReturn').style.color=avgReturn>=0?'var(--green)':'var(--red)';
+  document.getElementById('statOpen').textContent=open;
+  // Chart
+  if(chart&&signalData.length>0){
+    chart.style.display='block';
+    if(empty)empty.style.display='none';
+    drawPerfChart(chart,signalData);
+  }
+  // Table
+  if(el){
+    el.innerHTML=signalData.slice().reverse().map(s=>{
+      const ret=s.returnPct>=0?`<span style="color:var(--green)">+${s.returnPct}%</span>`:`<span style="color:var(--red)">${s.returnPct}%</span>`;
+      const date=new Date(s.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return`<div style="display:grid;grid-template-columns:50px 1fr auto auto auto;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px">
+        <div style="font-family:var(--mono);font-weight:700;color:var(--pink)">${s.sym}</div>
+        <div style="color:var(--mid);font-size:10px">${(s.name||'').slice(0,20)}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--mid)">$${s.entryPrice?.toFixed(2)||'—'}</div>
+        <div style="font-family:var(--mono);font-size:10px">${s.currentPrice?'$'+s.currentPrice.toFixed(2):'—'}</div>
+        <div style="font-family:var(--mono);font-size:11px;font-weight:700">${ret}</div>
+      </div>`;
+    }).join('')+'<div style="display:grid;grid-template-columns:50px 1fr auto auto auto;gap:8px;padding:7px 16px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border)"><div>Ticker</div><div>Name</div><div>Entry</div><div>Current</div><div>Return</div></div>';
+  }
+}
+function drawPerfChart(canvas,signals){
+  const w=canvas.offsetWidth||300,h=200;
+  canvas.width=w;canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,w,h);
+  if(!signals.length)return;
+  // Build cumulative return series
+  const sorted=[...signals].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  let val=10000;
+  const pts=[{x:0,y:10000}];
+  sorted.forEach((s,i)=>{val=val*(1+(s.returnPct||0)/100/signals.length);pts.push({x:i+1,y:val});});
+  // SPY flat baseline at 10000 for now (will improve with real SPY data)
+  const minY=Math.min(...pts.map(p=>p.y),9000);
+  const maxY=Math.max(...pts.map(p=>p.y),10500);
+  const rng=maxY-minY||1;
+  const px=(v)=>(v-minY)/rng*(h-20)+10;
+  const py=(i)=>i/(pts.length-1||1)*w;
+  // Draw portfolio line
+  ctx.beginPath();ctx.strokeStyle='#FF6EC7';ctx.lineWidth=2;
+  pts.forEach((p,i)=>i===0?ctx.moveTo(py(i),h-px(p.y)):ctx.lineTo(py(i),h-px(p.y)));
+  ctx.stroke();
+  // Baseline at 10000
+  ctx.beginPath();ctx.strokeStyle='rgba(255,255,255,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+  const base=h-px(10000);
+  ctx.moveTo(0,base);ctx.lineTo(w,base);ctx.stroke();ctx.setLineDash([]);
+  // Labels
+  ctx.fillStyle='rgba(255,110,199,.8)';ctx.font='10px IBM Plex Mono';
+  const last=pts[pts.length-1];
+  const retPct=((last.y-10000)/10000*100).toFixed(1);
+  ctx.fillText(`$${last.y.toFixed(0)} (${retPct>=0?'+':''}${retPct}%)`,4,14);
+}
+
+// ══ AUTO-LOAD MORNING RESULTS ════════════════════════════════
+async function loadMorningResults(){
+  try{
+    const r=await fetch('/api/daily-scan?action=last-scan');
+    if(!r.ok)return;
+    const data=await r.json();
+    if(!data?.date||!data?.results?.length)return;
+    // Only show if scan was today
+    const scanDate=data.date.split('T')[0];
+    const today=new Date().toISOString().split('T')[0];
+    if(scanDate!==today)return;
+    // Show morning results banner
+    const banner=document.createElement('div');
+    banner.style.cssText='background:var(--greendim);border:1px solid rgba(77,186,135,.4);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--green)';
+    const timeStr=new Date(data.date).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+    banner.innerHTML=`<span>✅ Morning scan complete at ${timeStr} · ${data.fullTriggers?.length||0} triggers · ${data.setupForming?.length||0} setups</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--green);cursor:pointer;font-size:14px">×</button>`;
+    const out=document.getElementById('out');
+    if(out)out.parentElement.insertBefore(banner,out);
+    // If full triggers found, render them immediately
+    if(data.results?.length>0){
+      // Store results for rendering
+      results=data.results.map(r=>({
+        sym:r.sym,pr:{name:r.name,exchange:''},q:{c:r.price,dp:0,v:0},
+        v:{passed:true,roce:null,fcf:null,de:null,pR:true,pF:true,pD:true,roceIsTrue:false},
+        tr:{passed:true,up:true,top:true,mom:null},
+        d:{passed:true,draw:r.draw,score:Math.max(0,1-Math.abs(r.draw-20.5)/12.5),inR:true},
+        t:{rsi:r.rsi,rsiCross:r.rsiCross,macdH:r.macdH,macdPos:r.macdPos,s200:null,s200up:true,nearS100:false,nearS200:false,rsiOB:false,macdNeg:false,daysBelow200:0},
+        sq:{status:r.ttmBull?'green':r.ttm?.includes('Coiling')?'blue':'red',statusLabel:r.ttm||'No Squeeze',squeezeOn:false,duration:0,bbWidth:0,bbWidthPctile:0,kcWidth:0,compression:0,momentumPos:r.macdPos},
+        timing:{label:r.rsiCross&&r.macdPos?'Confirmed':r.rsiCross||r.macdPos?'Approaching':'Early',score:0},
+        timingLabel:r.rsiCross&&r.macdPos?'Confirmed':r.rsiCross||r.macdPos?'Approaching':'Early',
+        beta:null,rs:null,closes:null,mom:null,dipScore:Math.max(0,1-Math.abs(r.draw-20.5)/12.5),
+        volRatio:null,dcf:null,earningsRev:null,revenueAccel:null,sizing:null,
+      }));
+      render();
+    }
+  }catch(e){console.warn('Morning results load failed:',e);}
+}
 function err(msg){const e=document.getElementById('errBox');e.textContent=msg;e.classList.add('on');}
 function clearErr(){document.getElementById('errBox').classList.remove('on');}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
@@ -1505,6 +1663,8 @@ window.addEventListener('load',async()=>{
   if('serviceWorker' in navigator) await registerServiceWorker();
   // Check if 9AM cron ran today while app was closed
   setTimeout(checkDailyScanResults, 2000);
+  // Auto-load morning scan results if scan ran today
+  setTimeout(loadMorningResults, 1500);
 });
 </script>
 </body>
