@@ -1166,7 +1166,7 @@ async function run(){
   if(!baseSyms.length){err('No tickers to scan.');return;}
   setRunning(true);clearErr();document.getElementById('out').innerHTML='';results=[];
   // Notify that scan is starting
-  sendLocalNotif('🔍 Hooks Screener','Daily scan starting — checking your universe for qualifying stocks…');
+  // No notification on manual run — only the 9AM cron notifies
   // ETFs already loaded on page open — only reload if not yet loaded
   if(!Object.keys(etfData).length) loadEtfs(key);
   if(!etfHistories['SPY'])await getHistory('SPY',400).then(h=>{if(h)etfHistories['SPY']=h;});
