@@ -151,12 +151,30 @@ export default async function handler(req,res){
   if(!key)return res.status(500).json({error:'FINNHUB_KEY not configured'});
 
   // Subscription management
-  if(req.query.action==='vapid-key')return res.status(200).json({publicKey:process.env.VAPID_PUBLIC_KEY||null});
+  if(req.query.action==='vapid-key'){
+    const pubKey=process.env.VAPID_PUBLIC_KEY;
+    console.log('VAPID key requested, exists:',!!pubKey);
+    return res.status(200).json({publicKey:pubKey||null});
+  }
   if(req.method==='POST'&&req.query.action==='subscribe'){
-    const sub=req.body;if(!sub?.endpoint)return res.status(400).json({error:'Invalid subscription'});
-    const subs=await kvGet(KV_SUBS,[]);
-    if(!subs.find(s=>s.endpoint===sub.endpoint)){subs.push(sub);await kvSet(KV_SUBS,subs);}
-    return res.status(201).json({success:true});
+    try{
+      const sub=req.body;
+      console.log('Subscribe request, endpoint:',sub?.endpoint?.slice(0,60));
+      if(!sub?.endpoint)return res.status(400).json({error:'Invalid subscription'});
+      const subs=await kvGet(KV_SUBS,[]);
+      console.log('Current subscribers:',subs.length);
+      if(!subs.find(s=>s.endpoint===sub.endpoint)){
+        subs.push(sub);
+        await kvSet(KV_SUBS,subs);
+        console.log('Subscriber added. Total:',subs.length);
+      } else {
+        console.log('Already subscribed. Total:',subs.length);
+      }
+      return res.status(201).json({success:true,total:subs.length});
+    }catch(e){
+      console.error('Subscribe error:',e.message);
+      return res.status(500).json({error:e.message});
+    }
   }
   // Return last scan results for app auto-load
   if(req.method==='GET'&&req.query.action==='last-scan'){
