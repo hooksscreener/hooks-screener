@@ -98,7 +98,81 @@ function evalTiming(closes){
 async function kvGet(key,fallback=[]){try{const v=await kv.get(key);return v??fallback;}catch{return fallback;}}
 async function kvSet(key,val){try{await kv.set(key,val);}catch(e){console.warn(`KV set ${key} failed:`,e.message);}}
 
-// ── Push ──────────────────────────────────────────────────────
+// ── Email ─────────────────────────────────────────────────────
+async function sendEmail(subject, htmlBody) {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) { console.warn('RESEND_API_KEY not set — email skipped'); return; }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Hooks Screener <onboarding@resend.dev>',
+        to: ['jhooks.business@gmail.com'],
+        subject,
+        html: htmlBody,
+      }),
+    });
+    const d = await r.json();
+    if (r.ok) { console.log('Email sent:', d.id); }
+    else { console.warn('Email failed:', JSON.stringify(d)); }
+  } catch(e) { console.warn('Email error:', e.message); }
+}
+
+function buildEmailHTML(fullTriggers, setupForming, monitoring, scanned) {
+  const date = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  const triggerRows = fullTriggers.map(t => `
+    <tr style="background:#0a1f14">
+      <td style="padding:10px 14px;font-family:monospace;font-weight:700;color:#FF6EC7">${t.sym}</td>
+      <td style="padding:10px 14px;color:#e8e8f0">${t.name||''}</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">$${t.price?.toFixed(2)||'—'}</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#e8e8f0">${t.draw}% off high</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">RSI ${t.rsi} ✓ MACD ✓</td>
+    </tr>`).join('');
+  const setupRows = setupForming.map(s => `
+    <tr>
+      <td style="padding:8px 14px;font-family:monospace;font-weight:700;color:#FF6EC7">${s.sym}</td>
+      <td style="padding:8px 14px;color:#7070a0">${s.name||''}</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#e8e8f0">$${s.price?.toFixed(2)||'—'}</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#e8924a">${s.draw}% off high</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#7070a0">RSI ${s.rsi}</td>
+    </tr>`).join('');
+  return `
+<!DOCTYPE html><html><body style="background:#05050a;color:#e8e8f0;font-family:sans-serif;margin:0;padding:20px">
+<div style="max-width:600px;margin:0 auto">
+  <div style="border-bottom:2px solid #FF6EC7;padding-bottom:12px;margin-bottom:20px">
+    <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#FF6EC7;text-transform:uppercase">◈ Hooks Screener</div>
+    <div style="font-size:20px;font-weight:700;color:#e8e8f0;margin-top:4px">Daily Scan — ${date}</div>
+    <div style="font-size:12px;color:#7070a0;margin-top:4px">Scanned ${scanned} stocks · ${monitoring} monitored</div>
+  </div>
+  ${fullTriggers.length > 0 ? `
+  <div style="margin-bottom:24px">
+    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#4dba87;text-transform:uppercase;margin-bottom:10px">🚨 Full Triggers — Act Now</div>
+    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
+      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TIMING</th></tr>
+      ${triggerRows}
+    </table>
+  </div>` : ''}
+  ${setupForming.length > 0 ? `
+  <div style="margin-bottom:24px">
+    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#e8924a;text-transform:uppercase;margin-bottom:10px">⚡ Setups Forming</div>
+    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
+      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">RSI</th></tr>
+      ${setupRows}
+    </table>
+  </div>` : ''}
+  ${fullTriggers.length === 0 && setupForming.length === 0 ? `
+  <div style="background:#09090f;border:1px solid #1a1a2e;border-radius:8px;padding:20px;text-align:center;color:#7070a0;margin-bottom:24px">
+    No qualifying stocks today — market may be near highs or in consolidation.
+  </div>` : ''}
+  <div style="text-align:center;padding-top:16px;border-top:1px solid #1a1a2e">
+    <a href="https://hooks-screener.vercel.app" style="background:#FF6EC7;color:#05050a;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-family:monospace;font-size:12px">Open Screener →</a>
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:10px;color:#2d2d50;font-family:monospace">Hooks Screener · Private · For informational purposes only</div>
+</div></body></html>`;
+}
+
+// ── Push ─────────────────────────────────────────────────────
 async function sendPush(subs,payload){
   const pub=process.env.VAPID_PUBLIC_KEY,priv=process.env.VAPID_PRIVATE_KEY;
   const subj=process.env.VAPID_SUBJECT||'mailto:support@hooks-screener.app';
@@ -342,5 +416,15 @@ export default async function handler(req,res){
   }
 
   console.log(`✅ Scan complete: ${fullTriggers.length} triggers, ${setupForming.length} setups, ${updatedMonitoring.length} monitored`);
+
+  // Send email — always fires regardless of push subscription status
+  const emailSubject = fullTriggers.length > 0
+    ? `🚨 Hooks Screener — ${fullTriggers.length === 1 ? fullTriggers[0].sym + ' FULL TRIGGER' : fullTriggers.length + ' Full Triggers'}`
+    : setupForming.length > 0
+      ? `⚡ Hooks Screener — ${setupForming.length} Setup${setupForming.length > 1 ? 's' : ''} Forming`
+      : `📊 Hooks Screener — Daily Scan Complete`;
+  const emailHTML = buildEmailHTML(fullTriggers, setupForming, updatedMonitoring.length, todaySyms.length);
+  await sendEmail(emailSubject, emailHTML);
+
   return res.status(200).json(scanRecord);
 }
