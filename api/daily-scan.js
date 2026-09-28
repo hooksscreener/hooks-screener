@@ -119,7 +119,90 @@ async function sendEmail(subject, htmlBody) {
   } catch(e) { console.warn('Email error:', e.message); }
 }
 
-function buildEmailHTML(fullTriggers, setupForming, monitoring, scanned) {
+function buildEmailHTML(fullTriggers, setupForming, monitoring, scanned, smcTriggers=[], closedSignals=[]) {
+  const date = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+  const triggerRows = fullTriggers.map(t => `
+    <tr style="background:#0a1f14">
+      <td style="padding:10px 14px;font-family:monospace;font-weight:700;color:#FF6EC7">${t.sym}</td>
+      <td style="padding:10px 14px;color:#e8e8f0">${t.name||''}</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">$${t.price?.toFixed(2)||'—'}</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#e8e8f0">${t.draw}% off high</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">RSI ${t.rsi} ✓ MACD ✓</td>
+    </tr>`).join('');
+  const setupRows = setupForming.map(s => `
+    <tr>
+      <td style="padding:8px 14px;font-family:monospace;font-weight:700;color:#FF6EC7">${s.sym}</td>
+      <td style="padding:8px 14px;color:#7070a0">${s.name||''}</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#e8e8f0">$${s.price?.toFixed(2)||'—'}</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#e8924a">${s.draw}% off high</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#7070a0">RSI ${s.rsi}</td>
+    </tr>`).join('');
+  const smcRows = smcTriggers.map(s => `
+    <tr style="background:#001e33">
+      <td style="padding:10px 14px;font-family:monospace;font-weight:700;color:#00B4FF">${s.sym}</td>
+      <td style="padding:10px 14px;color:#e8e8f0">${s.name||''}</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">$${s.price?.toFixed(2)||'—'}</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#e8924a">${s.draw}% off high</td>
+      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">Rev +${s.revGrowth||'—'}% · Margin ${s.marginExpanding?'↑':'—'}</td>
+    </tr>`).join('');
+  const closedRows = closedSignals.map(s => `
+    <tr>
+      <td style="padding:8px 14px;font-family:monospace;font-weight:700;color:#7070a0">${s.sym}</td>
+      <td style="padding:8px 14px;color:#7070a0">${s.exitReason||'Exit triggered'}</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#e8e8f0">$${s.entryPrice?.toFixed(2)||'—'}</td>
+      <td style="padding:8px 14px;font-family:monospace;color:#e8e8f0">$${s.currentPrice?.toFixed(2)||'—'}</td>
+      <td style="padding:8px 14px;font-family:monospace;font-weight:700;color:${(s.returnPct||0)>=0?'#4dba87':'#c95f6a'}">${s.returnPct!=null?(s.returnPct>=0?'+':'')+s.returnPct+'%':'—'}</td>
+    </tr>`).join('');
+  return `
+<!DOCTYPE html><html><body style="background:#05050a;color:#e8e8f0;font-family:sans-serif;margin:0;padding:20px">
+<div style="max-width:600px;margin:0 auto">
+  <div style="border-bottom:2px solid #FF6EC7;padding-bottom:12px;margin-bottom:20px">
+    <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#FF6EC7;text-transform:uppercase">◈ Hooks Screener</div>
+    <div style="font-size:20px;font-weight:700;color:#e8e8f0;margin-top:4px">Daily Scan — ${date}</div>
+    <div style="font-size:12px;color:#7070a0;margin-top:4px">Scanned ${scanned} stocks · ${monitoring} monitored</div>
+  </div>
+  ${closedSignals.length > 0 ? `
+  <div style="margin-bottom:24px">
+    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#7070a0;text-transform:uppercase;margin-bottom:10px">📤 Positions Closed — Exit Triggered</div>
+    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
+      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">REASON</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">ENTRY</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">EXIT</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">RETURN</th></tr>
+      ${closedRows}
+    </table>
+  </div>` : ''}
+  ${fullTriggers.length > 0 ? `
+  <div style="margin-bottom:24px">
+    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#4dba87;text-transform:uppercase;margin-bottom:10px">🚨 Large Cap Full Triggers — Act Now</div>
+    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
+      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TIMING</th></tr>
+      ${triggerRows}
+    </table>
+  </div>` : ''}
+  ${smcTriggers.length > 0 ? `
+  <div style="margin-bottom:24px">
+    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#00B4FF;text-transform:uppercase;margin-bottom:10px">🎯 Small/Mid Cap Triggers — High Growth</div>
+    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #001e33;border-radius:8px;overflow:hidden">
+      <tr style="background:#001e33"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">GROWTH</th></tr>
+      ${smcRows}
+    </table>
+  </div>` : ''}
+  ${setupForming.length > 0 ? `
+  <div style="margin-bottom:24px">
+    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#e8924a;text-transform:uppercase;margin-bottom:10px">⚡ Setups Forming</div>
+    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
+      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">RSI</th></tr>
+      ${setupRows}
+    </table>
+  </div>` : ''}
+  ${fullTriggers.length === 0 && setupForming.length === 0 && smcTriggers.length === 0 && closedSignals.length === 0 ? `
+  <div style="background:#09090f;border:1px solid #1a1a2e;border-radius:8px;padding:20px;text-align:center;color:#7070a0;margin-bottom:24px">
+    No qualifying stocks today — market may be near highs or in consolidation.
+  </div>` : ''}
+  <div style="text-align:center;padding-top:16px;border-top:1px solid #1a1a2e">
+    <a href="https://hooks-screener.vercel.app" style="background:#FF6EC7;color:#05050a;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-family:monospace;font-size:12px">Open Screener →</a>
+  </div>
+  <div style="text-align:center;margin-top:16px;font-size:10px;color:#2d2d50;font-family:monospace">Hooks Screener · Private · For informational purposes only</div>
+</div></body></html>`;
+}
   const date = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
   const triggerRows = fullTriggers.map(t => `
     <tr style="background:#0a1f14">
@@ -258,7 +341,19 @@ export default async function handler(req,res){
   // Return signal log for Performance tab
   if(req.method==='GET'&&req.query.action==='signals'){
     const signals=await kvGet(KV_SIGNALS,[]);
-    return res.status(200).json(signals);
+    // Filter out bad $0 entries before returning
+    const validSignals=signals.filter(s=>s.entryPrice&&s.entryPrice>0);
+    if(validSignals.length!==signals.length){
+      await kvSet(KV_SIGNALS,validSignals);
+      console.log(`Cleaned ${signals.length-validSignals.length} invalid signals`);
+    }
+    return res.status(200).json(validSignals);
+  }
+  // Clear all signals (reset performance tab)
+  if(req.method==='DELETE'&&req.query.action==='signals'){
+    await kvSet(KV_SIGNALS,[]);
+    console.log('Signal log cleared');
+    return res.status(200).json({success:true,message:'Signal log cleared'});
   }
 
   // ── CRON: Daily scan ──────────────────────────────────────
@@ -302,19 +397,17 @@ export default async function handler(req,res){
   // Full analysis on qualifiers
   for(const{sym,profile,metric}of p1Pass){
     try{
-      const closes=await getHistory(sym);
+      const[closes,q]=await Promise.all([getHistory(sym),fh(`/quote?symbol=${sym}`,{},key)]);
       if(!closes||closes.length<60)continue;
       if(!passesPhase2(closes))continue;
       keepMonitoring.push(sym);
       const p3=evalPhase3(closes);
       if(!p3.passes)continue;
       const timing=evalTiming(closes);
-      // Count green indicators
       const greenCount=[timing.rsiCross,timing.macdPos,timing.ttmBull].filter(Boolean).length;
-      // Full trigger: RSI + MACD required
       const isFullTrigger=timing.rsiCross&&timing.macdPos;
-      const q=await fh(`/quote?symbol=${sym}`,{},key);
-      const price=q?.c||0;
+      // Use quote price, fall back to last close from history
+      const price=q?.c||closes[closes.length-1]||0;
       const result={
         sym,name:profile.name||sym,price,draw:p3.draw,
         rsi:timing.rsi,macdH:timing.macdH,ttm:timing.ttm,
@@ -341,7 +434,7 @@ export default async function handler(req,res){
     try{
       const[metric,profile]=await Promise.all([fh('/stock/metric',{symbol:sym,metric:'all'},key),fh('/stock/profile2',{symbol:sym},key)]);
       if(!profile?.ticker||!passesPhase1(metric))continue;
-      const closes=await getHistory(sym);
+      const[closes,q2]=await Promise.all([getHistory(sym),fh(`/quote?symbol=${sym}`,{},key)]);
       if(!closes||!passesPhase2(closes))continue;
       keepMonitoring.push(sym);
       const p3=evalPhase3(closes);
@@ -349,8 +442,7 @@ export default async function handler(req,res){
       const timing=evalTiming(closes);
       const greenCount=[timing.rsiCross,timing.macdPos,timing.ttmBull].filter(Boolean).length;
       const isFullTrigger=timing.rsiCross&&timing.macdPos;
-      const q=await fh(`/quote?symbol=${sym}`,{},key);
-      const price=q?.c||0;
+      const price=q2?.c||closes[closes.length-1]||0;
       const result={sym,name:profile.name||sym,price,draw:p3.draw,rsi:timing.rsi,macdH:timing.macdH,ttm:timing.ttm,rsiCross:timing.rsiCross,macdPos:timing.macdPos,ttmBull:timing.ttmBull,greenCount,isFullTrigger};
       scanResults.push(result);
       if(isFullTrigger){fullTriggers.push(result);await logSignal(sym,price,p3.draw,timing.rsi,timing.macdH,timing.ttm,profile.name);}
@@ -417,14 +509,145 @@ export default async function handler(req,res){
 
   console.log(`✅ Scan complete: ${fullTriggers.length} triggers, ${setupForming.length} setups, ${updatedMonitoring.length} monitored`);
 
-  // Send email — always fires regardless of push subscription status
-  const emailSubject = fullTriggers.length > 0
-    ? `🚨 Hooks Screener — ${fullTriggers.length === 1 ? fullTriggers[0].sym + ' FULL TRIGGER' : fullTriggers.length + ' Full Triggers'}`
+  // ── SMC Daily Scan ─────────────────────────────────────────
+  const SMC_LIST = ["CRDO","IONQ","ACHR","RKLB","KINSALE","RYAN","GSHD","LSCC","VICR","NOVT","ONTO","FIX","IESC","STRL","POWL","IBKR","COOP","AMKR","FORM","QLYS","VRNS","GTLB","BILL","BRZE","DDOG","ZS","CRWD","SMCI","NTNX","AEHR","HLIT","NTCT","SWKS","MCHP","ENTG","COHU","MKSI","ACMR","CAMT","NVMI","ARRY","HASI","NOVA","DKNG","PENN","GENI","ACGL","NTAP","PSTG","NXST","IPGP","ALGM","DIOD","LFUS","KTOS","AVAV","MNKD","WOLF","ERII","PWP","EVER"];
+  const smcTriggers = [];
+  console.log(`🔍 SMC scan: ${SMC_LIST.length} stocks`);
+  for(const sym of SMC_LIST){
+    try{
+      const[metric,profile,hist,q]=await Promise.all([
+        finnhub('/stock/metric',{symbol:sym,metric:'all'},key),
+        finnhub('/stock/profile2',{symbol:sym},key),
+        getHistory(sym),
+        finnhub('/quote',{symbol:sym},key),
+      ]);
+      if(!profile?.ticker)continue;
+      const mt=metric?.metric||{};
+      const revGrowth=mt.revenueGrowthQuarterlyYoy||mt.revenueGrowthAnnual||null;
+      const opMargin=mt.operatingMarginTTM||null;
+      const opMarginPrev=mt['operatingMargin1YAnnual']||null;
+      const opIncome=mt.operatingIncomeTTM||mt.ebitTTM||null;
+      const de=mt['totalDebt/totalEquityAnnual']||mt['totalDebt/totalEquityQuarterly']||null;
+      const mktCap=mt.marketCapitalization||null;
+      // SMC Phase 1
+      const inCapRange=mktCap===null||(mktCap>=300&&mktCap<=10000);
+      const pRevGrowth=revGrowth!==null&&revGrowth>=0.15;
+      const marginExpanding=opMargin!==null&&opMarginPrev!==null&&opMargin>opMarginPrev;
+      const pProfitable=opIncome!==null&&opIncome>0;
+      const pDebt=de===null||de<1.5;
+      if(!inCapRange||!pProfitable||!pDebt||(!(pRevGrowth||marginExpanding)))continue;
+      // SMC Phase 2 + 3
+      if(!hist?.closes||hist.closes.length<220)continue;
+      const closes=hist.closes;
+      const n=closes.length;
+      const sma200c=closes.slice(-200).reduce((a,b)=>a+b,0)/200;
+      const sma200p=closes.slice(-220,-20).reduce((a,b)=>a+b,0)/200;
+      if(sma200c<=sma200p)continue; // 200D not rising
+      const cur=q?.c||closes[n-1];
+      const h52=Math.max(...closes.slice(-252));
+      const draw=(h52-cur)/h52*100;
+      if(draw<10||draw>35)continue; // Dip 10-35%
+      // RSI + MACD confirmation
+      const rp=14,hs=closes.slice(-rp*4);
+      let g=0,l=0;
+      for(let i=1;i<=Math.min(rp,hs.length-1);i++){const d=hs[i]-hs[i-1];d>=0?g+=d:l-=d;}
+      let ag=g/rp,al=l/rp;
+      for(let i=rp+1;i<hs.length;i++){const d=hs[i]-hs[i-1];ag=(ag*(rp-1)+(d>=0?d:0))/rp;al=(al*(rp-1)+(d<0?-d:0))/rp;}
+      const rsi=al===0?100:100-100/(1+ag/al);
+      const ema=(d,p)=>{const k=2/(p+1);let v=d[0],o=[v];for(let i=1;i<d.length;i++){v=d[i]*k+v*(1-k);o.push(v);}return o;};
+      const e12=ema(closes,12),e26=ema(closes,26),ml=e12.map((v,i)=>v-e26[i]),sl=ema(ml,9);
+      const mh=ml[n-1]-sl[n-1];
+      if(rsi<40||mh<=0)continue; // Need RSI+MACD confirmed
+      smcTriggers.push({
+        sym,name:profile.name||sym,price:+cur.toFixed(2),
+        draw:+draw.toFixed(1),rsi:+rsi.toFixed(1),
+        revGrowth:revGrowth!==null?+(revGrowth*100).toFixed(1):null,
+        marginExpanding,mktCap,isSmc:true,
+      });
+      // Log to signal KV with SMC tag
+      await logSignal(sym,cur,+draw.toFixed(1),+rsi.toFixed(1),+mh.toFixed(4),'SMC',profile.name,mktCap);
+    }catch(e){console.warn(`SMC ${sym}:`,e.message);}
+    await sleep(350);
+  }
+  console.log(`SMC triggers: ${smcTriggers.length}`);
+
+  // ── Check open signals for exits ──────────────────────────
+  const allSignals=await kvGet(KV_SIGNALS,[]);
+  const closedToday=[];
+  for(const sig of allSignals.filter(s=>s.status==='open'&&s.entryPrice>0)){
+    try{
+      const[metric,hist,q]=await Promise.all([
+        finnhub('/stock/metric',{symbol:sig.sym,metric:'all'},key),
+        getHistory(sig.sym),
+        finnhub('/quote',{symbol:sig.sym},key),
+      ]);
+      const mt=metric?.metric||{};
+      const opIncome=mt.operatingIncomeTTM||mt.ebitTTM||null;
+      const de=mt['totalDebt/totalEquityAnnual']||mt['totalDebt/totalEquityQuarterly']||null;
+      const revGrowth=mt.revenueGrowthQuarterlyYoy||null;
+      const closes=hist?.closes||null;
+      const cur=q?.c||0;
+      // Check SMC exits (fundamentals only, no RSI)
+      let exitReason=null;
+      if(sig.isSmc){
+        if(opIncome!==null&&opIncome<=0)exitReason='Operating income turned negative';
+        else if(de!==null&&de>2.0)exitReason=`D/E ${de.toFixed(2)} above 2.0`;
+        else if(revGrowth!==null&&revGrowth<0.05)exitReason=`Revenue growth fell to ${+(revGrowth*100).toFixed(1)}%`;
+        else if(closes){
+          const n=closes.length;
+          if(n>=205){
+            let days=0;
+            for(let i=n-1;i>=Math.max(0,n-5);i--){
+              const s=closes.slice(Math.max(0,i-200),i).reduce((a,b)=>a+b,0)/Math.min(200,i);
+              if(closes[i]<s)days++;else break;
+            }
+            if(days>=5)exitReason=`Price below 200D SMA ${days} consecutive days`;
+          }
+        }
+      } else {
+        // Large cap exits: fundamentals + RSI overbought allowed as advisory
+        if(opIncome!==null&&opIncome<=0)exitReason='Operating income turned negative';
+        else if(de!==null&&de>1.0)exitReason=`D/E ${de.toFixed(2)} rose above 1.0`;
+        else if(closes){
+          const n=closes.length;
+          if(n>=205){
+            let days=0;
+            for(let i=n-1;i>=Math.max(0,n-5);i--){
+              const s=closes.slice(Math.max(0,i-200),i).reduce((a,b)=>a+b,0)/Math.min(200,i);
+              if(closes[i]<s)days++;else break;
+            }
+            if(days>=5)exitReason=`Price below 200D SMA ${days} consecutive days`;
+          }
+        }
+      }
+      if(exitReason&&cur>0){
+        sig.status='closed';
+        sig.exitPrice=cur;
+        sig.currentPrice=cur;
+        sig.returnPct=+((cur-sig.entryPrice)/sig.entryPrice*100).toFixed(2);
+        sig.exitReason=exitReason;
+        sig.exitDate=new Date().toISOString();
+        closedToday.push({...sig});
+        console.log(`Signal closed: ${sig.sym} — ${exitReason} — ${sig.returnPct}%`);
+      } else if(cur>0){
+        sig.currentPrice=cur;
+        sig.returnPct=+((cur-sig.entryPrice)/sig.entryPrice*100).toFixed(2);
+      }
+    }catch(e){console.warn(`Exit check ${sig.sym}:`,e.message);}
+    await sleep(300);
+  }
+  if(allSignals.some(s=>s.status==='closed'&&s.exitDate?.startsWith(new Date().toISOString().split('T')[0]))||allSignals.some(s=>s.returnPct)){
+    await kvSet(KV_SIGNALS,allSignals).catch(()=>{});
+  }
+
+  // Send email with all sections
+  const emailSubject = fullTriggers.length > 0 || smcTriggers.length > 0 || closedToday.length > 0
+    ? `🚨 Hooks Screener — ${[fullTriggers.length>0?fullTriggers.length+' Triggers':'',smcTriggers.length>0?smcTriggers.length+' SMC':'',closedToday.length>0?closedToday.length+' Closed':''].filter(Boolean).join(' · ')}`
     : setupForming.length > 0
       ? `⚡ Hooks Screener — ${setupForming.length} Setup${setupForming.length > 1 ? 's' : ''} Forming`
       : `📊 Hooks Screener — Daily Scan Complete`;
-  const emailHTML = buildEmailHTML(fullTriggers, setupForming, updatedMonitoring.length, todaySyms.length);
+  const emailHTML = buildEmailHTML(fullTriggers, setupForming, updatedMonitoring.length, todaySyms.length, smcTriggers, closedToday);
   await sendEmail(emailSubject, emailHTML);
 
-  return res.status(200).json(scanRecord);
+  return res.status(200).json({...scanRecord,smcTriggers:smcTriggers.map(s=>s.sym),closedToday:closedToday.map(s=>s.sym)});
 }

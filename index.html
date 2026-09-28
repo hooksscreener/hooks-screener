@@ -179,6 +179,19 @@ textarea{resize:vertical;min-height:56px}
 .toast{position:absolute;top:8px;right:8px;background:var(--green);color:var(--bg);font-size:9px;padding:2px 6px;border-radius:4px;opacity:0;transition:opacity .2s}
 .toast.on{opacity:1}
 .no-trig{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:16px;font-size:11px;color:var(--mid);line-height:1.6}
+/* Swipeable dual screener */
+.screener-slides-wrap{overflow:hidden;width:100%;position:relative}
+.screener-slides{display:flex;transition:transform .35s cubic-bezier(.4,0,.2,1);will-change:transform}
+.screener-slide{min-width:100%;width:100%}
+.slide-label{font-family:var(--mono);font-size:9px;letter-spacing:3px;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.slide-label-tag{background:var(--pinkdim);border:1px solid var(--pink);border-radius:4px;padding:3px 10px;color:var(--pink)}
+.slide-label-tag.smc{background:rgba(0,180,255,.1);border-color:var(--blue);color:var(--blue)}
+.slide-dots{display:flex;justify-content:center;gap:8px;padding:8px 0 2px}
+.slide-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);cursor:pointer;transition:background .2s}
+.slide-dot.active{background:var(--pink)}
+.slide-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.slide-nav-btn{background:none;border:1px solid var(--border);border-radius:6px;color:var(--mid);font-family:var(--mono);font-size:10px;padding:4px 12px;cursor:pointer;transition:all .15s}
+.slide-nav-btn:hover{border-color:var(--pink);color:var(--pink)}
 /* Notification bar */
 .notif-bar{background:var(--bluedim);border:1px solid rgba(0,180,255,.3);border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:11px}
 .notif-bar.hidden{display:none}
@@ -369,46 +382,109 @@ textarea{resize:vertical;min-height:56px}
     </div>
     <div class="etf-grid" id="etfGrid"><div style="grid-column:1/-1;text-align:center;padding:14px 0;font-size:10px;color:var(--dim);font-family:var(--mono)">Run screener to load ETF market health →</div></div>
   </div>
-  <div class="screener-layout">
-    <div class="screener-left">
-      <div class="field-label">Universe</div>
-      <div class="mode-grid">
-        <button class="mode-btn active" onclick="setMode('individual')" id="btn-individual"><div class="mode-title">My Tickers</div><div class="mode-desc">Specific stocks to analyze</div></button>
-        <button class="mode-btn" onclick="setMode('sp500')" id="btn-sp500"><div class="mode-title">S&amp;P 500</div><div class="mode-desc">130 large-cap names</div></button>
-        <button class="mode-btn" onclick="setMode('adr')" id="btn-adr"><div class="mode-title">Global ADRs</div><div class="mode-desc">150 international stocks</div></button>
-        <button class="mode-btn" onclick="setMode('russell')" id="btn-russell"><div class="mode-title">Small/Mid Cap</div><div class="mode-desc">Russell 2000 subset</div></button>
-        <button class="mode-btn" onclick="setMode('all')" id="btn-all"><div class="mode-title">All Universes</div><div class="mode-desc">SP500 + ADRs + Small/Mid</div></button>
-        <button class="mode-btn" onclick="setMode('fmp')" id="btn-fmp"><div class="mode-title">FMP Full Market</div><div class="mode-desc">Requires $22/mo plan</div></button>
-      </div>
-      <div class="config">
-        <div class="field-label">Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
-        <input type="password" id="apiKey" placeholder="Paste your Finnhub key…" oninput="saveKey()">
-        <div id="sec-individual">
-          <div class="field-label">Tickers (leave blank to auto-scan S&amp;P 500)</div>
-          <textarea id="tickers">GOOGL, TSM, SKHY, BKE, IRDM, NVDA, AVGO</textarea>
-        </div>
-        <div id="sec-fmp" style="display:none">
-          <div class="field-label">FMP API Key (Starter tier required)</div>
-          <input type="password" id="fmpKey" placeholder="FMP key…" oninput="saveFmpKey()">
-        </div>
-        <div id="sec-limit" style="display:none">
-          <div class="field-label">Scan limit</div>
-          <input type="number" id="scanLimit" value="50" min="10" max="300">
-          <div style="font-size:10px;color:var(--mid);margin-top:-8px;margin-bottom:12px">Free tier: keep ≤60 to avoid rate limits</div>
-        </div>
-      </div>
-      <button class="run-btn" id="runBtn" onclick="run()">▶  Run Screener</button>
-      <div class="progress" id="prog"><span id="progTxt">Starting…</span><div class="pbar-wrap"><div class="pbar" id="pbar"></div></div></div>
-      <div class="err" id="errBox"></div>
-      <div id="out"></div>
+
+  <!-- Slide navigation -->
+  <div class="slide-nav">
+    <button class="slide-nav-btn" id="slidePrev" onclick="goSlide(0)" disabled>← Large Cap</button>
+    <div class="slide-dots">
+      <div class="slide-dot active" onclick="goSlide(0)" id="dot0"></div>
+      <div class="slide-dot" onclick="goSlide(1)" id="dot1"></div>
     </div>
-    <div class="screener-sidebar">
-      <div class="sidebar-wl">
-        <div class="sidebar-head">★ Watchlist<span class="sidebar-badge" id="wlCount">0</span></div>
-        <div id="sidebarWl"><div class="sidebar-empty">Add stocks with ☆ Watch on any card</div></div>
-      </div>
-    </div>
+    <button class="slide-nav-btn" id="slideNext" onclick="goSlide(1)">Small/Mid Cap →</button>
   </div>
+
+  <!-- Swipeable slides wrapper -->
+  <div class="screener-slides-wrap" id="slidesWrap">
+    <div class="screener-slides" id="slidesTrack">
+
+      <!-- ── SLIDE 0: LARGE CAP ── -->
+      <div class="screener-slide">
+        <div class="slide-label">
+          <span>Large Cap Screener</span>
+          <span class="slide-label-tag">Phase 1–3 · ROCE · FCF · Dip 8–33%</span>
+        </div>
+        <div class="screener-layout">
+          <div class="screener-left">
+            <div class="field-label">Universe</div>
+            <div class="mode-grid">
+              <button class="mode-btn active" onclick="setMode('individual')" id="btn-individual"><div class="mode-title">My Tickers</div><div class="mode-desc">Specific stocks to analyze</div></button>
+              <button class="mode-btn" onclick="setMode('sp500')" id="btn-sp500"><div class="mode-title">S&amp;P 500</div><div class="mode-desc">130 large-cap names</div></button>
+              <button class="mode-btn" onclick="setMode('adr')" id="btn-adr"><div class="mode-title">Global ADRs</div><div class="mode-desc">150 international stocks</div></button>
+              <button class="mode-btn" onclick="setMode('russell')" id="btn-russell"><div class="mode-title">Small/Mid Cap</div><div class="mode-desc">Russell 2000 subset</div></button>
+              <button class="mode-btn" onclick="setMode('all')" id="btn-all"><div class="mode-title">All Universes</div><div class="mode-desc">SP500 + ADRs + Small/Mid</div></button>
+              <button class="mode-btn" onclick="setMode('fmp')" id="btn-fmp"><div class="mode-title">FMP Full Market</div><div class="mode-desc">Requires $22/mo plan</div></button>
+            </div>
+            <div class="config">
+              <div class="field-label">Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
+              <input type="password" id="apiKey" placeholder="Paste your Finnhub key…" oninput="saveKey()">
+              <div id="sec-individual">
+                <div class="field-label">Tickers (leave blank to auto-scan S&amp;P 500)</div>
+                <textarea id="tickers">GOOGL, TSM, SKHY, BKE, IRDM, NVDA, AVGO</textarea>
+              </div>
+              <div id="sec-fmp" style="display:none">
+                <div class="field-label">FMP API Key (Starter tier required)</div>
+                <input type="password" id="fmpKey" placeholder="FMP key…" oninput="saveFmpKey()">
+              </div>
+              <div id="sec-limit" style="display:none">
+                <div class="field-label">Scan limit</div>
+                <input type="number" id="scanLimit" value="50" min="10" max="300">
+                <div style="font-size:10px;color:var(--mid);margin-top:-8px;margin-bottom:12px">Free tier: keep ≤60 to avoid rate limits</div>
+              </div>
+            </div>
+            <button class="run-btn" id="runBtn" onclick="run()">▶  Run Screener</button>
+            <div class="progress" id="prog"><span id="progTxt">Starting…</span><div class="pbar-wrap"><div class="pbar" id="pbar"></div></div></div>
+            <div class="err" id="errBox"></div>
+            <div id="out"></div>
+          </div>
+          <div class="screener-sidebar">
+            <div class="sidebar-wl">
+              <div class="sidebar-head">★ Watchlist<span class="sidebar-badge" id="wlCount">0</span></div>
+              <div id="sidebarWl"><div class="sidebar-empty">Add stocks with ☆ Watch on any card</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SLIDE 1: SMALL/MID CAP ── -->
+      <div class="screener-slide">
+        <div class="slide-label">
+          <span>Small / Mid Cap Radar</span>
+          <span class="slide-label-tag smc">$300M–$10B · Revenue Growth · Margin Expansion</span>
+        </div>
+        <div class="screener-layout">
+          <div class="screener-left">
+            <div class="field-label">Universe</div>
+            <div class="mode-grid">
+              <button class="mode-btn active" onclick="setSmcMode('smc-individual')" id="btn-smc-individual"><div class="mode-title">My Tickers</div><div class="mode-desc">Specific small/mid caps</div></button>
+              <button class="mode-btn" onclick="setSmcMode('smc-russell')" id="btn-smc-russell"><div class="mode-title">Russell 2000</div><div class="mode-desc">Full small/mid subset</div></button>
+              <button class="mode-btn" onclick="setSmcMode('smc-growth')" id="btn-smc-growth"><div class="mode-title">Growth Names</div><div class="mode-desc">Curated high-growth list</div></button>
+            </div>
+            <div class="config">
+              <div id="sec-smc-individual">
+                <div class="field-label">Tickers</div>
+                <textarea id="smcTickers">CRDO, IONQ, ACHR, RKLB, KINSALE, RYAN, GSHD, LSCC, VICR, NOVT, ONTO, FIX, IESC, STRL, POWL, IBKR, COOP, AMKR, FORM, QLYS</textarea>
+              </div>
+              <div id="sec-smc-limit" style="display:none">
+                <div class="field-label">Scan limit</div>
+                <input type="number" id="smcScanLimit" value="40" min="10" max="100">
+              </div>
+            </div>
+            <button class="run-btn" id="smcRunBtn" onclick="runSmc()" style="border-color:var(--blue);background:rgba(0,180,255,.1);color:var(--blue)">▶  Run Small/Mid Cap Radar</button>
+            <div class="progress" id="smcProg"><span id="smcProgTxt">Starting…</span><div class="pbar-wrap"><div class="pbar" id="smcPbar"></div></div></div>
+            <div class="err" id="smcErrBox"></div>
+            <div id="smcOut"></div>
+          </div>
+          <div class="screener-sidebar">
+            <div class="sidebar-wl">
+              <div class="sidebar-head" style="color:var(--blue)">★ SMC Watchlist<span class="sidebar-badge" style="background:rgba(0,180,255,.2);color:var(--blue)" id="smcWlCount">0</span></div>
+              <div id="smcSidebarWl"><div class="sidebar-empty">Add stocks with ☆ Watch on any card</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /slides-track -->
+  </div><!-- /slides-wrap -->
 </div>
 
 <!-- ══ WATCHLIST ══ -->
@@ -441,19 +517,40 @@ textarea{resize:vertical;min-height:56px}
 
 <!-- ══ PERFORMANCE ══ -->
 <div class="tab-panel" id="tab-performance">
-  <div class="sec-head" style="color:var(--pink);margin-bottom:6px">📈 Signal Performance</div>
-  <div style="font-size:11px;color:var(--mid);margin-bottom:16px;line-height:1.6">Tracks every full trigger fired by the screener — whether or not you invested. Hypothetical $10k split equally across all signals at entry price vs SPY benchmark. Starts building from today.</div>
+  <div class="sec-head" style="color:var(--pink);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center">
+    <span>📈 Signal Performance</span>
+    <button onclick="clearSignalLog()" style="background:none;border:1px solid var(--border);border-radius:5px;color:var(--dim);font-family:var(--mono);font-size:9px;padding:4px 10px;cursor:pointer" id="clearSignalsBtn">Reset Log</button>
+  </div>
+  <div style="font-size:11px;color:var(--mid);margin-bottom:16px;line-height:1.6">Tracks every full trigger — whether or not you invested. Hypothetical $10k split equally across three buckets: Large Cap, Mid Cap, Small Cap (33/33/33). Each bucket vs SPY. Exits fire automatically on fundamentals breaking or 200D SMA break.</div>
   <!-- Chart -->
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:14px">
     <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mid);margin-bottom:12px">Hypothetical Portfolio vs SPY</div>
     <canvas id="perfChart" style="width:100%;height:200px"></canvas>
     <div id="perfChartEmpty" style="text-align:center;padding:60px 0;font-family:var(--mono);font-size:10px;color:var(--dim)">No signals yet — chart builds as full triggers fire each morning</div>
   </div>
-  <!-- Stats row -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px" id="perfStats">
+  <!-- 33/33/33 bucket stats -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--mid);text-transform:uppercase;margin-bottom:6px">Large Cap</div>
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--pink)" id="statLarge">—</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px" id="statLargeCount">0 signals</div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--mid);text-transform:uppercase;margin-bottom:6px">Mid Cap</div>
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--blue)" id="statMid">—</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px" id="statMidCount">0 signals</div>
+    </div>
+    <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--mid);text-transform:uppercase;margin-bottom:6px">Small Cap</div>
+      <div style="font-family:var(--mono);font-size:16px;font-weight:700;color:var(--green)" id="statSmall">—</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px" id="statSmallCount">0 signals</div>
+    </div>
+  </div>
+  <!-- Overall stats -->
+  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--pink)" id="statSignals">0</div>
-      <div style="font-size:9px;color:var(--dim);margin-top:2px">Signals</div>
+      <div style="font-size:9px;color:var(--dim);margin-top:2px">Total Signals</div>
     </div>
     <div style="background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center">
       <div style="font-family:var(--mono);font-size:18px;font-weight:700;color:var(--green)" id="statWinRate">—</div>
@@ -831,6 +928,28 @@ function notifyTriggers(stocks){
     sendLocalNotif(`Hooks Screener: ${sym}`,`${sqColor} ${sqLabel} · RSI ${r.t?.rsi??'—'} · ${r.d.draw}% off high`);
   });
 }
+// ══ SLIDES (swipeable dual screener) ════════════════════════
+let currentSlide=0;
+function goSlide(n){
+  currentSlide=n;
+  document.getElementById('slidesTrack').style.transform=`translateX(-${n*100}%)`;
+  document.getElementById('dot0').classList.toggle('active',n===0);
+  document.getElementById('dot1').classList.toggle('active',n===1);
+  document.getElementById('slidePrev').disabled=n===0;
+  document.getElementById('slideNext').disabled=n===1;
+  document.getElementById('slidePrev').textContent='← Large Cap';
+  document.getElementById('slideNext').textContent='Small/Mid Cap →';
+}
+// Touch swipe support
+(function(){
+  let startX=0;
+  document.getElementById('slidesWrap')?.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;},{passive:true});
+  document.getElementById('slidesWrap')?.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX;
+    if(Math.abs(dx)>50)goSlide(dx<0?1:0);
+  },{passive:true});
+})();
+
 // ══ TABS ════════════════════════════════════════════════════
 function switchTab(t,btn){
   document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
@@ -841,6 +960,15 @@ function switchTab(t,btn){
   if(t==='performance'){loadSignals();}
 }
 // ══ MODE ════════════════════════════════════════════════════
+function setMode(m){
+  mode=m;
+  ['individual','sp500','adr','russell','all','fmp'].forEach(id=>{
+    document.getElementById('btn-'+id)?.classList.toggle('active',id===m);
+  });
+  document.getElementById('sec-individual').style.display=m==='individual'?'block':'none';
+  document.getElementById('sec-fmp').style.display=m==='fmp'?'block':'none';
+  document.getElementById('sec-limit').style.display=m!=='individual'?'block':'none';
+}
 function setMode(m){
   mode=m;
   ['individual','sp500','adr','russell','all','fmp'].forEach(id=>{
@@ -862,6 +990,217 @@ function getSymbols(){
   if(mode==='all') return [...new Set([...SP500,...ADR_LIST,...RUSSELL_SUBSET])].slice(0,lim);
   return [];
 }
+
+// ══ SMALL/MID CAP SCREENER ══════════════════════════════════
+const SMC_GROWTH_LIST=["CRDO","IONQ","ACHR","RKLB","KINSALE","RYAN","GSHD","LSCC","VICR","NOVT","ONTO","FIX","IESC","STRL","POWL","IBKR","COOP","AMKR","FORM","QLYS","VRNS","GTLB","BILL","BRZE","DDOG","ZS","CRWD","SMCI","NTNX","AEHR","HLIT","NTCT","SWKS","MCHP","ENTG","COHU","MKSI","ACMR","CAMT","NVMI","ARRY","HASI","NOVA","DKNG","PENN","GENI","ACGL","NTAP","PSTG","NXST","IPGP","ALGM","DIOD","LFUS","KTOS","AVAV","MNKD","WOLF","ERII","PWP","EVER","IONQ"];
+let smcMode='smc-individual',smcResults=[];
+
+function setSmcMode(m){
+  smcMode=m;
+  ['smc-individual','smc-russell','smc-growth'].forEach(id=>{
+    document.getElementById('btn-'+id)?.classList.toggle('active',id===m);
+  });
+  document.getElementById('sec-smc-individual').style.display=m==='smc-individual'?'block':'none';
+  document.getElementById('sec-smc-limit').style.display=m!=='smc-individual'?'block':'none';
+}
+
+function getSmcSymbols(){
+  const lim=parseInt(document.getElementById('smcScanLimit')?.value)||40;
+  if(smcMode==='smc-individual'){
+    const raw=document.getElementById('smcTickers')?.value?.trim()||'';
+    return raw?raw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean):SMC_GROWTH_LIST.slice(0,30);
+  }
+  if(smcMode==='smc-russell') return RUSSELL_SUBSET.slice(0,lim);
+  if(smcMode==='smc-growth') return SMC_GROWTH_LIST.slice(0,lim);
+  return SMC_GROWTH_LIST.slice(0,lim);
+}
+
+// SMC Phase 1: relaxed fundamentals for small/mid cap
+function evalSmcPhase1(m){
+  const mt=m?.metric||{};
+  const revGrowth=mt.revenueGrowthQuarterlyYoy||mt.revenueGrowthAnnual||null;
+  const opMargin=mt.operatingMarginTTM||null;
+  const opMarginPrev=mt['operatingMargin1YAnnual']||null;
+  const opIncome=mt.operatingIncomeTTM||mt.ebitTTM||null;
+  const de=mt['totalDebt/totalEquityAnnual']||mt['totalDebt/totalEquityQuarterly']||null;
+  const mktCap=mt.marketCapitalization||null;
+  // Market cap filter: $300M to $10B
+  const inCapRange=mktCap===null||(mktCap>=300&&mktCap<=10000);
+  // Revenue growth ≥15%
+  const pRevGrowth=revGrowth!==null&&revGrowth>=0.15;
+  // Operating margin expanding YoY
+  const pMarginExpanding=opMargin!==null&&opMarginPrev!==null&&opMargin>opMarginPrev;
+  // Positive operating income in most recent year
+  const pProfitable=opIncome!==null&&opIncome>0;
+  // D/E < 1.5
+  const pDebt=de===null||de<1.5;
+  // Need: in cap range + profitable + debt OK + (revenue growth OR margin expanding)
+  return{
+    passed:inCapRange&&pProfitable&&pDebt&&(pRevGrowth||pMarginExpanding),
+    revGrowth:revGrowth!==null?+(revGrowth*100).toFixed(1):null,
+    opMargin:opMargin!==null?+(opMargin*100).toFixed(1):null,
+    marginExpanding:pMarginExpanding,
+    pProfitable,pDebt,pRevGrowth,inCapRange,
+    mktCap,de
+  };
+}
+
+// SMC exit rules — fundamentals only, NO RSI overbought
+function evalSmcExits(t,v){
+  const exits=[];
+  // Operating income turned negative
+  if(v?.pProfitable===false)exits.push({reason:'Operating income turned negative',severity:'high'});
+  // D/E above 2.0
+  if(v?.de!==null&&v?.de>2.0)exits.push({reason:`D/E ${v.de?.toFixed(2)} above 2.0`,severity:'high'});
+  // 200D SMA break for 5 days
+  if(t?.daysBelow200>=5)exits.push({reason:`Price below 200D SMA ${t.daysBelow200} days`,severity:'high'});
+  // Revenue growth collapsed
+  if(v?.revGrowth!==null&&v?.revGrowth<5)exits.push({reason:`Revenue growth fell to ${v.revGrowth}%`,severity:'medium'});
+  return exits;
+}
+
+async function runSmc(){
+  const key=document.getElementById('apiKey').value.trim();
+  if(!key){errSmc('Paste your Finnhub API key in the Large Cap screener first.');return;}
+  const syms=getSmcSymbols();
+  if(!syms.length){errSmc('No tickers to scan.');return;}
+  setSmcRunning(true);clearErrSmc();document.getElementById('smcOut').innerHTML='';smcResults=[];
+  const qualified=[];
+  setSmcProgress(`Phase 1 check: scanning ${syms.length} stocks…`,5);
+  for(let i=0;i<syms.length;i++){
+    const sym=syms[i];
+    if(abortFlag)break;
+    setSmcProgress(`Phase 1: ${sym} (${i+1}/${syms.length})…`,(i/syms.length)*40);
+    try{
+      const[mt,pr]=await Promise.all([fh(`/stock/metric?symbol=${sym}&metric=all`,key),fh(`/stock/profile2?symbol=${sym}`,key)]);
+      if(!pr?.ticker)continue;
+      const v=evalSmcPhase1(mt);
+      if(v.passed)qualified.push({sym,pr,mt,v});
+    }catch{}
+    await sleep(400);
+  }
+  setSmcProgress(`${qualified.length} passed Phase 1 — running technical analysis…`,45);
+  for(let i=0;i<qualified.length;i++){
+    if(abortFlag)break;
+    const{sym,pr,mt,v}=qualified[i];
+    setSmcProgress(`Technical: ${sym} (${i+1}/${qualified.length})…`,45+(i/qualified.length)*50);
+    try{
+      const[hist,q]=await Promise.all([getHistory(sym),fh(`/quote?symbol=${sym}`,key)]);
+      const closes=hist?.closes||null;
+      const volumes=hist?.volumes||null;
+      const t=calcTech(closes);
+      // SMC Phase 2: 200D SMA rising
+      if(!t?.s200up){await sleep(300);continue;}
+      // SMC Phase 3: dip 10-35%, midpoint 23.5%
+      const draw=t?.draw||0;
+      if(draw<10||draw>35){await sleep(300);continue;}
+      const dipScore=Math.max(0,1-Math.abs(draw-23.5)/11.5);
+      const sq=closes?calcTTMSqueeze(closes):null;
+      const timing=calcTimingLabel(t,sq);
+      const volRatio=calcVolRatio(q,volumes);
+      const exits=evalSmcExits(t,v);
+      smcResults.push({sym,pr,q,v,t,sq,timing,timingLabel:timing.label,closes,draw,dipScore,volRatio,exits,isSmc:true});
+    }catch(e){console.warn(sym,e);}
+    await sleep(500);
+  }
+  // Sort by dip score
+  smcResults.sort((a,b)=>b.dipScore-a.dipScore);
+  setSmcRunning(false);renderSmc();
+}
+
+function setSmcRunning(on){
+  const b=document.getElementById('smcRunBtn');
+  b.disabled=on;b.textContent=on?'⟳  Scanning…':'▶  Run Small/Mid Cap Radar';
+  document.getElementById('smcProg').classList.toggle('on',on);
+  if(!on)document.getElementById('smcPbar').style.width='100%';
+}
+function setSmcProgress(txt,pct){
+  document.getElementById('smcProgTxt').textContent=txt;
+  document.getElementById('smcPbar').style.width=pct+'%';
+}
+function errSmc(msg){const e=document.getElementById('smcErrBox');e.textContent=msg;e.classList.add('on');}
+function clearErrSmc(){document.getElementById('smcErrBox').classList.remove('on');}
+
+function renderSmc(){
+  const el=document.getElementById('smcOut');
+  if(!smcResults.length){
+    el.innerHTML=`<div class="no-trig"><strong style="color:var(--mid);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase">No qualifying small/mid caps found</strong><br><br>No stocks passed all phases in this scan. Try expanding your ticker list or check back when market conditions allow more dips in range.</div>`;
+    return;
+  }
+  let h=`<div class="stats"><span>Qualified: <strong>${smcResults.length}</strong></span><span>Sorted by: <strong style="color:var(--blue)">Optimal Dip Score ↓</strong></span></div>`;
+  h+=`<div class="sec-head" style="color:var(--blue)">✓ Small/Mid Cap Qualifiers</div>`;
+  smcResults.forEach(r=>{h+=smcCard(r);});
+  el.innerHTML=h;
+}
+
+function smcCard(r){
+  const{sym,pr,q,v,t,sq,timing,draw,dipScore,volRatio,exits}=r;
+  const px=q?.c,chg=q?.dp;
+  const cc=chg>=0?'up':'dn',cs=chg!=null?`${chg>=0?'▲':'▼'}${Math.abs(chg).toFixed(2)}%`:'—';
+  const dipPct=Math.round(dipScore*100);
+  const timingCls=timing.label==='Confirmed'?'confirmed':timing.label==='Approaching'?'approaching':'early';
+  const exitWarn=exits.length>0?`<div style="border-top:1px solid rgba(201,95,106,.3);padding:8px 14px;background:rgba(201,95,106,.05);font-family:var(--mono);font-size:9px;color:var(--red)">⚠ ${exits[0].reason}</div>`:'';
+  return`<div class="card" style="border-color:rgba(0,180,255,.3)">
+  <div class="card-top" onclick="togCard(event,'smc-${sym}')">
+    <div class="card-row1">
+      <div><div class="ticker" style="color:var(--blue)">${sym}</div><div class="exch" style="color:var(--blue);opacity:.6">SMC</div></div>
+      <div><div class="co-name">${(pr.name||'').slice(0,24)}</div><div class="co-ind">${(pr.finnhubIndustry||'').slice(0,26)}</div></div>
+      <div class="price-col">
+        <div class="price">${px?'$'+px.toFixed(2):'—'}</div>
+        <div class="chg ${cc}">${cs}</div>
+        ${r.volRatio!=null?`<div style="font-family:var(--mono);font-size:9px;color:${r.volRatio>=2?'var(--green)':r.volRatio<0.5?'var(--dim)':'var(--mid)'}">Vol ${r.volRatio}x</div>`:''}
+      </div>
+    </div>
+    <div class="card-row2">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--mid)">
+        ${v.revGrowth!=null?`Rev +${v.revGrowth}% YoY`:'—'}
+        ${v.marginExpanding?` · Margin ↑`:''}
+        ${v.mktCap?` · $${(v.mktCap/1000).toFixed(1)}B`:''}
+      </div>
+      <div class="chips">
+        <div class="chip pass" style="border-color:rgba(0,180,255,.4);background:rgba(0,180,255,.1);color:var(--blue)"><div class="chip-dot"></div>Quality</div>
+        <div class="chip pass" style="border-color:rgba(0,180,255,.4);background:rgba(0,180,255,.1);color:var(--blue)"><div class="chip-dot"></div>Trend</div>
+        <div class="dip-score-wrap">
+          <div class="chip pass" style="border-color:rgba(0,180,255,.4);background:rgba(0,180,255,.1);color:var(--blue)"><div class="chip-dot"></div>Dip</div>
+          <div class="dip-score-bar"><div class="dip-score-fill" style="width:${dipPct}%;background:linear-gradient(90deg,var(--blue),var(--green))"></div></div>
+          <div class="dip-info-btn">ⓘ<div class="dip-tooltip">${draw}% down from 52-week high</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="timing-panel">
+    <span class="timing-label">Entry Timing</span>
+    <div class="timing-signals">
+      <div class="timing-sig"><div class="timing-sig-dot ${t?.rsiCross?'bull':t?.rsi>35?'neut':'bear'}"></div>RSI ${t?.rsi??'—'}<div class="sig-tooltip">RSI-14: ${t?.rsiCross?'✅ Above 40 pivot':'Below 40 — still early'}</div></div>
+      <div class="timing-sig"><div class="timing-sig-dot ${t?.macdH>0?'bull':t?.macdH>-0.5?'neut':'bear'}"></div>MACD ${t?.macdH!=null?t.macdH.toFixed(3):'—'}<div class="sig-tooltip">MACD: ${t?.macdH>0?'✅ Positive momentum':'Negative momentum'}</div></div>
+      ${sq?`<div class="timing-sig"><div class="timing-sig-dot ${sq.status==='green'?'squeeze-off':sq.status==='blue'?'squeeze-on':sq.status==='red'?'squeeze-bear':'squeeze-gray'}"></div>${sq.statusLabel}</div>`:''}
+    </div>
+    <div class="timing-score ${timingCls}">${timing.label}</div>
+  </div>
+  ${exitWarn}
+  <div class="detail" id="d-smc-${sym}">
+    <div>
+      <div class="dt">Phase 1 — Small/Mid Quality</div>
+      ${mrow('Revenue Growth YoY',v.revGrowth!=null?'+'+v.revGrowth+'%':'—',v.pRevGrowth)}
+      ${mrow('Operating Margin',v.opMargin!=null?v.opMargin+'%':'—',null)}
+      ${mrow('Margin Expanding YoY',v.marginExpanding?'Yes':'No / Unknown',v.marginExpanding)}
+      ${mrow('Profitable (Op. Income)',v.pProfitable?'Yes':'No',v.pProfitable)}
+      ${mrow('Debt (D/E)',v.de!=null?v.de.toFixed(2):'—',v.pDebt)}
+      ${mrow('Market Cap',v.mktCap!=null?'$'+(v.mktCap/1000).toFixed(1)+'B':'—',v.inCapRange)}
+    </div>
+    <div>
+      <div class="dt">Phase 2 — Trend</div>
+      ${mrow('200D SMA Slope',t?.s200up?'Rising ↑':'Flat ↓',t?.s200up)}
+      ${mrow('Drawdown from 52w high',draw+'%',draw>=10&&draw<=35)}
+      ${mrow('Dip Quality Score',(dipScore*100).toFixed(0)+'%',dipScore>0.6)}
+      <div class="dt" style="margin-top:12px">Exit Watch (SMC Rules)</div>
+      <div style="font-size:10px;color:var(--dim);line-height:1.6;margin-top:4px">Exits on: fundamentals breaking, D/E above 2.0, or 200D SMA broken 5 days. RSI overbought is NOT an exit signal.</div>
+      ${exits.length>0?exits.map(e=>`<div style="font-family:var(--mono);font-size:9px;color:${e.severity==='high'?'var(--red)':'var(--orange)'};margin-top:4px">⚠ ${e.reason}</div>`).join(''):'<div style="font-family:var(--mono);font-size:9px;color:var(--green);margin-top:4px">✓ No exit signals</div>'}
+    </div>
+  </div>
+</div>`;
+}
+
 // ══ DATA ════════════════════════════════════════════════════
 // ── Finnhub API caller ───────────────────────────────────────
 // Uses /api/scan serverless proxy if available (key server-side)
@@ -1521,6 +1860,16 @@ async function sendSms(msg){const sid=document.getElementById('twilioSid').value
 async function testSms(){const st=document.getElementById('smsStatus');st.className='sms-status';st.textContent='Sending…';st.style.display='block';const ok=await sendSms('Hooks Screener: Test ✓ SMS alerts working.');st.className=ok?'sms-status ok':'sms-status er';st.textContent=ok?'✓ Test SMS sent!':'✗ Failed — check Twilio credentials.';}
 // ══ PERFORMANCE TAB ══════════════════════════════════════════
 let signalData=[];
+async function clearSignalLog(){
+  if(!confirm('Reset the signal log? This clears all $0 entries and starts fresh. Cannot be undone.'))return;
+  try{
+    await fetch('/api/daily-scan?action=signals',{method:'DELETE'});
+    signalData=[];
+    renderPerformance();
+    document.getElementById('clearSignalsBtn').textContent='Cleared ✓';
+    setTimeout(()=>{document.getElementById('clearSignalsBtn').textContent='Reset Log';},3000);
+  }catch(e){alert('Failed to clear: '+e.message);}
+}
 async function loadSignals(){
   try{
     const r=await fetch('/api/daily-scan?action=signals');
@@ -1528,6 +1877,12 @@ async function loadSignals(){
     signalData=await r.json();
     renderPerformance();
   }catch{}
+}
+function getCapCategory(mktCap){
+  if(!mktCap)return'large';
+  if(mktCap<2000)return'small';
+  if(mktCap<10000)return'mid';
+  return'large';
 }
 function renderPerformance(){
   const el=document.getElementById('signalTable');
@@ -1539,36 +1894,53 @@ function renderPerformance(){
     if(empty)empty.style.display='block';
     return;
   }
-  // Stats
+  // 33/33/33 bucket stats
+  const large=signalData.filter(s=>getCapCategory(s.mktCap)==='large');
+  const mid=signalData.filter(s=>getCapCategory(s.mktCap)==='mid');
+  const small=signalData.filter(s=>getCapCategory(s.mktCap)==='small'||s.isSmc);
+  const bucketReturn=(bucket)=>{
+    const with_=bucket.filter(s=>s.returnPct!=null&&s.returnPct!==0);
+    if(!with_.length)return null;
+    return+(with_.reduce((a,s)=>a+s.returnPct,0)/with_.length).toFixed(1);
+  };
+  const lr=bucketReturn(large),mr=bucketReturn(mid),sr=bucketReturn(small);
+  const setEl=(id,val,col)=>{const e=document.getElementById(id);if(e){e.textContent=val;if(col)e.style.color=col;}};
+  setEl('statLarge',lr!=null?(lr>=0?'+':'')+lr+'%':'—',lr!=null?(lr>=0?'var(--green)':'var(--red)'):null);
+  setEl('statLargeCount',large.length+' signals');
+  setEl('statMid',mr!=null?(mr>=0?'+':'')+mr+'%':'—',mr!=null?(mr>=0?'var(--green)':'var(--red)'):null);
+  setEl('statMidCount',mid.length+' signals');
+  setEl('statSmall',sr!=null?(sr>=0?'+':'')+sr+'%':'—',sr!=null?(sr>=0?'var(--green)':'var(--red)'):null);
+  setEl('statSmallCount',small.length+' signals');
+  // Overall stats
   const open=signalData.filter(s=>s.status==='open').length;
-  const withReturn=signalData.filter(s=>s.returnPct!==undefined);
+  const withReturn=signalData.filter(s=>s.returnPct!=null&&s.returnPct!==0);
   const winners=withReturn.filter(s=>s.returnPct>0).length;
   const winRate=withReturn.length?Math.round(winners/withReturn.length*100):null;
   const avgReturn=withReturn.length?(withReturn.reduce((a,s)=>a+s.returnPct,0)/withReturn.length):null;
-  document.getElementById('statSignals').textContent=signalData.length;
-  document.getElementById('statWinRate').textContent=winRate!==null?winRate+'%':'—';
-  document.getElementById('statAvgReturn').textContent=avgReturn!==null?(avgReturn>=0?'+':'')+avgReturn.toFixed(1)+'%':'—';
-  document.getElementById('statAvgReturn').style.color=avgReturn>=0?'var(--green)':'var(--red)';
-  document.getElementById('statOpen').textContent=open;
+  setEl('statSignals',signalData.length);
+  setEl('statWinRate',winRate!=null?winRate+'%':'—',winRate!=null?(winRate>=50?'var(--green)':'var(--red)'):null);
+  setEl('statAvgReturn',avgReturn!=null?(avgReturn>=0?'+':'')+avgReturn.toFixed(1)+'%':'—',avgReturn!=null?(avgReturn>=0?'var(--green)':'var(--red)'):null);
+  setEl('statOpen',open);
   // Chart
-  if(chart&&signalData.length>0){
-    chart.style.display='block';
-    if(empty)empty.style.display='none';
-    drawPerfChart(chart,signalData);
-  }
-  // Table
+  if(chart&&signalData.length>0){chart.style.display='block';if(empty)empty.style.display='none';drawPerfChart(chart,signalData);}
+  // Table with cap category badge and exit status
   if(el){
     el.innerHTML=signalData.slice().reverse().map(s=>{
-      const ret=s.returnPct>=0?`<span style="color:var(--green)">+${s.returnPct}%</span>`:`<span style="color:var(--red)">${s.returnPct}%</span>`;
-      const date=new Date(s.date).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      return`<div style="display:grid;grid-template-columns:50px 1fr auto auto auto;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px">
-        <div style="font-family:var(--mono);font-weight:700;color:var(--pink)">${s.sym}</div>
-        <div style="color:var(--mid);font-size:10px">${(s.name||'').slice(0,20)}</div>
+      const ret=s.returnPct&&s.returnPct!==0?(s.returnPct>=0?`<span style="color:var(--green)">+${s.returnPct}%</span>`:`<span style="color:var(--red)">${s.returnPct}%</span>`):`<span style="color:var(--dim)">—</span>`;
+      const cat=getCapCategory(s.mktCap);
+      const catColor=cat==='small'?'var(--green)':cat==='mid'?'var(--blue)':'var(--pink)';
+      const statusBadge=s.status==='closed'?`<span style="font-family:var(--mono);font-size:8px;color:var(--mid);background:var(--border);padding:1px 5px;border-radius:3px">CLOSED</span>`:'';
+      return`<div style="display:grid;grid-template-columns:56px 1fr auto auto auto;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px">
+        <div>
+          <div style="font-family:var(--mono);font-weight:700;color:${catColor}">${s.sym}</div>
+          <div style="font-family:var(--mono);font-size:7px;color:${catColor};opacity:.7;text-transform:uppercase">${cat}</div>
+        </div>
+        <div style="color:var(--mid);font-size:10px">${(s.name||'').slice(0,18)} ${statusBadge}</div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--mid)">$${s.entryPrice?.toFixed(2)||'—'}</div>
         <div style="font-family:var(--mono);font-size:10px">${s.currentPrice?'$'+s.currentPrice.toFixed(2):'—'}</div>
         <div style="font-family:var(--mono);font-size:11px;font-weight:700">${ret}</div>
       </div>`;
-    }).join('')+'<div style="display:grid;grid-template-columns:50px 1fr auto auto auto;gap:8px;padding:7px 16px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border)"><div>Ticker</div><div>Name</div><div>Entry</div><div>Current</div><div>Return</div></div>';
+    }).join('')+'<div style="display:grid;grid-template-columns:56px 1fr auto auto auto;gap:8px;padding:7px 16px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border)"><div>Ticker</div><div>Name</div><div>Entry</div><div>Current</div><div>Return</div></div>';
   }
 }
 function drawPerfChart(canvas,signals){
