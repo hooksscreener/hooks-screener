@@ -88,6 +88,11 @@ textarea{resize:vertical;min-height:56px}
 .etf-trend.up{background:rgba(77,186,135,.15);color:var(--green);border:1px solid rgba(77,186,135,.3)}
 .etf-trend.dn{background:rgba(201,95,106,.12);color:var(--red);border:1px solid rgba(201,95,106,.25)}
 .etf-trend.na{background:rgba(100,100,160,.1);color:var(--mid);border:1px solid rgba(100,100,160,.2)}
+.perf-filter-btn{background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:var(--mono);font-size:8px;padding:3px 8px;cursor:pointer;letter-spacing:0.5px;transition:all .15s;white-space:nowrap}
+.perf-filter-btn.active{background:var(--pinkdim);border-color:var(--pink);color:var(--pink)}
+.top10-row{display:grid;grid-template-columns:24px 56px 1fr auto auto;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px}
+.top10-rank{font-family:var(--mono);font-size:10px;color:var(--dim);font-weight:700}
+.top10-rank.gold{color:#f5c842}.top10-rank.silver{color:#b0b0c0}.top10-rank.bronze{color:#c07840}
 /* Card */
 .card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color .2s}
 .card.trigger{border-color:rgba(77,186,135,.5);box-shadow:0 0 0 1px rgba(77,186,135,.1)}
@@ -418,7 +423,10 @@ textarea{resize:vertical;min-height:56px}
               <div class="field-label">Finnhub API Key <a href="https://finnhub.io/register" target="_blank">get free key ↗</a></div>
               <input type="password" id="apiKey" placeholder="Paste your Finnhub key…" oninput="saveKey()">
               <div id="sec-individual">
-                <div class="field-label">Tickers (leave blank to auto-scan S&amp;P 500)</div>
+                <div class="field-label" style="justify-content:space-between">
+                  <span>Tickers (leave blank to auto-scan S&amp;P 500)</span>
+                  <button onclick="document.getElementById('tickers').value=''" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:var(--mono);font-size:8px;padding:2px 8px;cursor:pointer;letter-spacing:1px;transition:all .15s" onmouseover="this.style.borderColor='var(--pink)';this.style.color='var(--pink)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'">✕ CLEAR</button>
+                </div>
                 <textarea id="tickers">GOOGL, TSM, SKHY, BKE, IRDM, NVDA, AVGO</textarea>
               </div>
               <div id="sec-fmp" style="display:none">
@@ -461,7 +469,10 @@ textarea{resize:vertical;min-height:56px}
             </div>
             <div class="config">
               <div id="sec-smc-individual">
-                <div class="field-label">Tickers</div>
+                <div class="field-label" style="justify-content:space-between">
+                  <span>Tickers</span>
+                  <button onclick="document.getElementById('smcTickers').value=''" style="background:none;border:1px solid var(--border);border-radius:4px;color:var(--dim);font-family:var(--mono);font-size:8px;padding:2px 8px;cursor:pointer;letter-spacing:1px;transition:all .15s" onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--dim)'">✕ CLEAR</button>
+                </div>
                 <textarea id="smcTickers">CRDO, IONQ, ACHR, RKLB, KINSALE, RYAN, GSHD, LSCC, VICR, NOVT, ONTO, FIX, IESC, STRL, POWL, IBKR, COOP, AMKR, FORM, QLYS</textarea>
               </div>
               <div id="sec-smc-limit" style="display:none">
@@ -565,9 +576,38 @@ textarea{resize:vertical;min-height:56px}
       <div style="font-size:9px;color:var(--dim);margin-top:2px">Open</div>
     </div>
   </div>
-  <!-- Signal table -->
+  <!-- Top 10 Leaderboard -->
+  <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;display:none" id="top10Wrap">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">🏆 Top 10 Performers</div>
+      <div style="font-size:9px;color:var(--dim)">Best return % across all signals</div>
+    </div>
+    <div id="top10Table"></div>
+  </div>
+
+  <!-- Signal table with filters -->
   <div style="background:var(--panel);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mid)">All Signals</div>
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--mid);flex:none">All Signals</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-left:auto">
+        <!-- Cap filter -->
+        <button class="perf-filter-btn active" data-filter="cap" data-val="all" onclick="setPerfFilter('cap','all')">All Caps</button>
+        <button class="perf-filter-btn" data-filter="cap" data-val="large" onclick="setPerfFilter('cap','large')"><span style="color:var(--pink)">●</span> Large</button>
+        <button class="perf-filter-btn" data-filter="cap" data-val="mid" onclick="setPerfFilter('cap','mid')"><span style="color:var(--blue)">●</span> Mid</button>
+        <button class="perf-filter-btn" data-filter="cap" data-val="small" onclick="setPerfFilter('cap','small')"><span style="color:var(--green)">●</span> Small</button>
+        <div style="width:1px;background:var(--border);margin:0 2px"></div>
+        <!-- Status filter -->
+        <button class="perf-filter-btn active" data-filter="status" data-val="all" onclick="setPerfFilter('status','all')">All</button>
+        <button class="perf-filter-btn" data-filter="status" data-val="open" onclick="setPerfFilter('status','open')">Open</button>
+        <button class="perf-filter-btn" data-filter="status" data-val="closed" onclick="setPerfFilter('status','closed')">Closed</button>
+      </div>
+    </div>
+    <!-- Sector filter row -->
+    <div style="padding:8px 16px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;align-items:center">
+      <span style="font-family:var(--mono);font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;flex:none">Sector:</span>
+      <button class="perf-filter-btn active" data-filter="sector" data-val="all" onclick="setPerfFilter('sector','all')">All</button>
+      <div id="sectorFilterBtns"></div>
+    </div>
     <div id="signalTable"><div style="padding:20px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--dim)">No signals logged yet</div></div>
   </div>
 </div>
@@ -1860,6 +1900,85 @@ async function sendSms(msg){const sid=document.getElementById('twilioSid').value
 async function testSms(){const st=document.getElementById('smsStatus');st.className='sms-status';st.textContent='Sending…';st.style.display='block';const ok=await sendSms('Hooks Screener: Test ✓ SMS alerts working.');st.className=ok?'sms-status ok':'sms-status er';st.textContent=ok?'✓ Test SMS sent!':'✗ Failed — check Twilio credentials.';}
 // ══ PERFORMANCE TAB ══════════════════════════════════════════
 let signalData=[];
+const perfFilters={cap:'all',status:'all',sector:'all'};
+function setPerfFilter(type,val){
+  perfFilters[type]=val;
+  // Update active state on buttons
+  document.querySelectorAll(`.perf-filter-btn[data-filter="${type}"]`).forEach(b=>{
+    b.classList.toggle('active',b.dataset.val===val);
+  });
+  renderSignalTable();
+}
+function getFilteredSignals(){
+  return signalData.filter(s=>{
+    if(perfFilters.cap!=='all'&&getCapCategory(s.mktCap)!==perfFilters.cap)return false;
+    if(perfFilters.status!=='all'&&(s.status||'open')!==perfFilters.status)return false;
+    if(perfFilters.sector!=='all'){
+      const sSec=(s.sector||'').toLowerCase();
+      if(!sSec.includes(perfFilters.sector.toLowerCase()))return false;
+    }
+    return true;
+  });
+}
+function buildSectorFilterBtns(){
+  const el=document.getElementById('sectorFilterBtns');
+  if(!el)return;
+  // Collect unique sectors from signals
+  const sectors=[...new Set(signalData.map(s=>s.sector).filter(Boolean))].sort();
+  el.innerHTML=sectors.map(sec=>`<button class="perf-filter-btn" data-filter="sector" data-val="${sec}" onclick="setPerfFilter('sector','${sec.replace(/'/g,"\\'")}')">
+    ${sec.length>20?sec.slice(0,20)+'…':sec}</button>`).join('');
+}
+function renderTop10(){
+  const wrap=document.getElementById('top10Wrap');
+  const el=document.getElementById('top10Table');
+  if(!el||!wrap)return;
+  const withReturn=signalData.filter(s=>s.returnPct!=null&&s.returnPct!==0);
+  if(!withReturn.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  const top10=withReturn.slice().sort((a,b)=>b.returnPct-a.returnPct).slice(0,10);
+  const ranks=['🥇','🥈','🥉'];
+  el.innerHTML=top10.map((s,i)=>{
+    const cat=getCapCategory(s.mktCap);
+    const catColor=cat==='small'?'var(--green)':cat==='mid'?'var(--blue)':'var(--pink)';
+    const ret=s.returnPct>=0?`<span style="color:var(--green);font-weight:700">+${s.returnPct}%</span>`:`<span style="color:var(--red);font-weight:700">${s.returnPct}%</span>`;
+    const rankClass=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const rankStr=i<3?ranks[i]:`<span style="color:var(--dim)">#${i+1}</span>`;
+    const statusBadge=s.status==='closed'?`<span style="font-family:var(--mono);font-size:7px;color:var(--mid);background:var(--border);padding:1px 4px;border-radius:3px;margin-left:4px">CLOSED</span>`:'';
+    return`<div class="top10-row">
+      <div class="top10-rank ${rankClass}">${rankStr}</div>
+      <div><div style="font-family:var(--mono);font-weight:700;color:${catColor};font-size:13px">${s.sym}</div><div style="font-family:var(--mono);font-size:7px;color:${catColor};opacity:.7;text-transform:uppercase">${cat}</div></div>
+      <div style="color:var(--mid);font-size:10px">${(s.name||'').slice(0,22)}${statusBadge}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:var(--dim)">${s.date?s.date.slice(0,10):''}</div>
+      <div style="font-family:var(--mono);font-size:12px">${ret}</div>
+    </div>`;
+  }).join('');
+}
+function renderSignalTable(){
+  const el=document.getElementById('signalTable');
+  if(!el)return;
+  const filtered=getFilteredSignals();
+  if(!filtered.length){
+    el.innerHTML='<div style="padding:20px;text-align:center;font-family:var(--mono);font-size:10px;color:var(--dim)">No signals match current filters</div>';
+    return;
+  }
+  el.innerHTML=filtered.slice().reverse().map(s=>{
+    const ret=s.returnPct&&s.returnPct!==0?(s.returnPct>=0?`<span style="color:var(--green)">+${s.returnPct}%</span>`:`<span style="color:var(--red)">${s.returnPct}%</span>`):`<span style="color:var(--dim)">—</span>`;
+    const cat=getCapCategory(s.mktCap);
+    const catColor=cat==='small'?'var(--green)':cat==='mid'?'var(--blue)':'var(--pink)';
+    const statusBadge=s.status==='closed'?`<span style="font-family:var(--mono);font-size:8px;color:var(--mid);background:var(--border);padding:1px 5px;border-radius:3px">CLOSED</span>`:'';
+    const secLabel=s.sector?`<div style="font-family:var(--mono);font-size:7px;color:var(--dim);margin-top:1px">${s.sector.slice(0,18)}</div>`:'';
+    return`<div style="display:grid;grid-template-columns:64px 1fr auto auto auto;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px">
+      <div>
+        <div style="font-family:var(--mono);font-weight:700;color:${catColor}">${s.sym}</div>
+        <div style="font-family:var(--mono);font-size:7px;color:${catColor};opacity:.7;text-transform:uppercase">${cat}</div>
+      </div>
+      <div><div style="color:var(--mid);font-size:10px">${(s.name||'').slice(0,18)} ${statusBadge}</div>${secLabel}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--mid)">$${s.entryPrice?.toFixed(2)||'—'}</div>
+      <div style="font-family:var(--mono);font-size:10px">${s.currentPrice?'$'+s.currentPrice.toFixed(2):'—'}</div>
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700">${ret}</div>
+    </div>`;
+  }).join('')+'<div style="display:grid;grid-template-columns:64px 1fr auto auto auto;gap:8px;padding:7px 16px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;border-top:1px solid var(--border)"><div>Ticker</div><div>Name / Sector</div><div>Entry</div><div>Current</div><div>Return</div></div>';
+}
 async function clearSignalLog(){
   if(!confirm('Reset the signal log? This clears all $0 entries and starts fresh. Cannot be undone.'))return;
   try{
@@ -1923,25 +2042,10 @@ function renderPerformance(){
   setEl('statOpen',open);
   // Chart
   if(chart&&signalData.length>0){chart.style.display='block';if(empty)empty.style.display='none';drawPerfChart(chart,signalData);}
-  // Table with cap category badge and exit status
-  if(el){
-    el.innerHTML=signalData.slice().reverse().map(s=>{
-      const ret=s.returnPct&&s.returnPct!==0?(s.returnPct>=0?`<span style="color:var(--green)">+${s.returnPct}%</span>`:`<span style="color:var(--red)">${s.returnPct}%</span>`):`<span style="color:var(--dim)">—</span>`;
-      const cat=getCapCategory(s.mktCap);
-      const catColor=cat==='small'?'var(--green)':cat==='mid'?'var(--blue)':'var(--pink)';
-      const statusBadge=s.status==='closed'?`<span style="font-family:var(--mono);font-size:8px;color:var(--mid);background:var(--border);padding:1px 5px;border-radius:3px">CLOSED</span>`:'';
-      return`<div style="display:grid;grid-template-columns:56px 1fr auto auto auto;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px">
-        <div>
-          <div style="font-family:var(--mono);font-weight:700;color:${catColor}">${s.sym}</div>
-          <div style="font-family:var(--mono);font-size:7px;color:${catColor};opacity:.7;text-transform:uppercase">${cat}</div>
-        </div>
-        <div style="color:var(--mid);font-size:10px">${(s.name||'').slice(0,18)} ${statusBadge}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--mid)">$${s.entryPrice?.toFixed(2)||'—'}</div>
-        <div style="font-family:var(--mono);font-size:10px">${s.currentPrice?'$'+s.currentPrice.toFixed(2):'—'}</div>
-        <div style="font-family:var(--mono);font-size:11px;font-weight:700">${ret}</div>
-      </div>`;
-    }).join('')+'<div style="display:grid;grid-template-columns:56px 1fr auto auto auto;gap:8px;padding:7px 16px;font-family:var(--mono);font-size:8px;letter-spacing:1px;color:var(--dim);text-transform:uppercase;border-bottom:1px solid var(--border)"><div>Ticker</div><div>Name</div><div>Entry</div><div>Current</div><div>Return</div></div>';
-  }
+  // Build dynamic sector filter buttons, Top 10, and signal table
+  buildSectorFilterBtns();
+  renderTop10();
+  renderSignalTable();
 }
 function drawPerfChart(canvas,signals){
   const w=canvas.offsetWidth||300,h=200;

@@ -269,7 +269,7 @@ async function sendPush(subs,payload){
 }
 
 // ── Signal logging ────────────────────────────────────────────
-async function logSignal(sym,price,draw,rsi,macdH,ttm,name){
+async function logSignal(sym,price,draw,rsi,macdH,ttm,name,mktCap,sector){
   const signals=await kvGet(KV_SIGNALS,[]);
   // Don't double-log same stock within 7 days
   const recent=signals.find(s=>s.sym===sym&&(Date.now()-new Date(s.date).getTime())<7*86400000);
@@ -277,7 +277,9 @@ async function logSignal(sym,price,draw,rsi,macdH,ttm,name){
   signals.push({
     sym,name:name||sym,date:new Date().toISOString(),
     entryPrice:price,currentPrice:price,returnPct:0,
-    draw,rsi,macdH,ttm,status:'open'
+    draw,rsi,macdH,ttm,status:'open',
+    ...(mktCap!=null&&{mktCap}),
+    ...(sector&&{sector}),
   });
   await kvSet(KV_SIGNALS,signals);
   console.log(`Signal logged: ${sym} @ $${price}`);
@@ -417,8 +419,10 @@ export default async function handler(req,res){
       scanResults.push(result);
       if(isFullTrigger){
         fullTriggers.push(result);
-        // Log signal for performance tracking
-        await logSignal(sym,price,p3.draw,timing.rsi,timing.macdH,timing.ttm,profile.name);
+        // Log signal for performance tracking (include mktCap + sector for filtering)
+        const mktCapVal=metric?.metric?.marketCapitalization||null;
+        const sectorVal=profile.finnhubIndustry||profile.gicsSubIndustry||null;
+        await logSignal(sym,price,p3.draw,timing.rsi,timing.macdH,timing.ttm,profile.name,mktCapVal,sectorVal);
       } else {
         setupForming.push(result);
       }
@@ -564,8 +568,9 @@ export default async function handler(req,res){
         revGrowth:revGrowth!==null?+(revGrowth*100).toFixed(1):null,
         marginExpanding,mktCap,isSmc:true,
       });
-      // Log to signal KV with SMC tag
-      await logSignal(sym,cur,+draw.toFixed(1),+rsi.toFixed(1),+mh.toFixed(4),'SMC',profile.name,mktCap);
+      // Log to signal KV with SMC tag + sector for filtering
+      const smcSector=profile.finnhubIndustry||profile.gicsSubIndustry||null;
+      await logSignal(sym,cur,+draw.toFixed(1),+rsi.toFixed(1),+mh.toFixed(4),'SMC',profile.name,mktCap,smcSector);
     }catch(e){console.warn(`SMC ${sym}:`,e.message);}
     await sleep(350);
   }
