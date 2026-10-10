@@ -203,57 +203,6 @@ function buildEmailHTML(fullTriggers, setupForming, monitoring, scanned, smcTrig
   <div style="text-align:center;margin-top:16px;font-size:10px;color:#2d2d50;font-family:monospace">Hooks Screener · Private · For informational purposes only</div>
 </div></body></html>`;
 }
-  const date = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric', year:'numeric' });
-  const triggerRows = fullTriggers.map(t => `
-    <tr style="background:#0a1f14">
-      <td style="padding:10px 14px;font-family:monospace;font-weight:700;color:#FF6EC7">${t.sym}</td>
-      <td style="padding:10px 14px;color:#e8e8f0">${t.name||''}</td>
-      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">$${t.price?.toFixed(2)||'—'}</td>
-      <td style="padding:10px 14px;font-family:monospace;color:#e8e8f0">${t.draw}% off high</td>
-      <td style="padding:10px 14px;font-family:monospace;color:#4dba87">RSI ${t.rsi} ✓ MACD ✓</td>
-    </tr>`).join('');
-  const setupRows = setupForming.map(s => `
-    <tr>
-      <td style="padding:8px 14px;font-family:monospace;font-weight:700;color:#FF6EC7">${s.sym}</td>
-      <td style="padding:8px 14px;color:#7070a0">${s.name||''}</td>
-      <td style="padding:8px 14px;font-family:monospace;color:#e8e8f0">$${s.price?.toFixed(2)||'—'}</td>
-      <td style="padding:8px 14px;font-family:monospace;color:#e8924a">${s.draw}% off high</td>
-      <td style="padding:8px 14px;font-family:monospace;color:#7070a0">RSI ${s.rsi}</td>
-    </tr>`).join('');
-  return `
-<!DOCTYPE html><html><body style="background:#05050a;color:#e8e8f0;font-family:sans-serif;margin:0;padding:20px">
-<div style="max-width:600px;margin:0 auto">
-  <div style="border-bottom:2px solid #FF6EC7;padding-bottom:12px;margin-bottom:20px">
-    <div style="font-family:monospace;font-size:11px;letter-spacing:3px;color:#FF6EC7;text-transform:uppercase">◈ Hooks Screener</div>
-    <div style="font-size:20px;font-weight:700;color:#e8e8f0;margin-top:4px">Daily Scan — ${date}</div>
-    <div style="font-size:12px;color:#7070a0;margin-top:4px">Scanned ${scanned} stocks · ${monitoring} monitored</div>
-  </div>
-  ${fullTriggers.length > 0 ? `
-  <div style="margin-bottom:24px">
-    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#4dba87;text-transform:uppercase;margin-bottom:10px">🚨 Full Triggers — Act Now</div>
-    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
-      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TIMING</th></tr>
-      ${triggerRows}
-    </table>
-  </div>` : ''}
-  ${setupForming.length > 0 ? `
-  <div style="margin-bottom:24px">
-    <div style="font-family:monospace;font-size:10px;letter-spacing:2px;color:#e8924a;text-transform:uppercase;margin-bottom:10px">⚡ Setups Forming</div>
-    <table style="width:100%;border-collapse:collapse;background:#09090f;border:1px solid #1a1a2e;border-radius:8px;overflow:hidden">
-      <tr style="background:#1a1a2e"><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">TICKER</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">NAME</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">PRICE</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">DIP</th><th style="padding:8px 14px;text-align:left;font-family:monospace;font-size:10px;color:#7070a0">RSI</th></tr>
-      ${setupRows}
-    </table>
-  </div>` : ''}
-  ${fullTriggers.length === 0 && setupForming.length === 0 ? `
-  <div style="background:#09090f;border:1px solid #1a1a2e;border-radius:8px;padding:20px;text-align:center;color:#7070a0;margin-bottom:24px">
-    No qualifying stocks today — market may be near highs or in consolidation.
-  </div>` : ''}
-  <div style="text-align:center;padding-top:16px;border-top:1px solid #1a1a2e">
-    <a href="https://hooks-screener.vercel.app" style="background:#FF6EC7;color:#05050a;padding:10px 24px;border-radius:6px;text-decoration:none;font-weight:700;font-family:monospace;font-size:12px">Open Screener →</a>
-  </div>
-  <div style="text-align:center;margin-top:16px;font-size:10px;color:#2d2d50;font-family:monospace">Hooks Screener · Private · For informational purposes only</div>
-</div></body></html>`;
-}
 
 // ── Push ─────────────────────────────────────────────────────
 async function sendPush(subs,payload){
@@ -520,10 +469,10 @@ export default async function handler(req,res){
   for(const sym of SMC_LIST){
     try{
       const[metric,profile,hist,q]=await Promise.all([
-        finnhub('/stock/metric',{symbol:sym,metric:'all'},key),
-        finnhub('/stock/profile2',{symbol:sym},key),
+        fh('/stock/metric',{symbol:sym,metric:'all'},key),
+        fh('/stock/profile2',{symbol:sym},key),
         getHistory(sym),
-        finnhub('/quote',{symbol:sym},key),
+        fh('/quote',{symbol:sym},key),
       ]);
       if(!profile?.ticker)continue;
       const mt=metric?.metric||{};
@@ -541,8 +490,8 @@ export default async function handler(req,res){
       const pDebt=de===null||de<1.5;
       if(!inCapRange||!pProfitable||!pDebt||(!(pRevGrowth||marginExpanding)))continue;
       // SMC Phase 2 + 3
-      if(!hist?.closes||hist.closes.length<220)continue;
-      const closes=hist.closes;
+      if(!hist||hist.length<220)continue;
+      const closes=hist;
       const n=closes.length;
       const sma200c=closes.slice(-200).reduce((a,b)=>a+b,0)/200;
       const sma200p=closes.slice(-220,-20).reduce((a,b)=>a+b,0)/200;
@@ -582,15 +531,15 @@ export default async function handler(req,res){
   for(const sig of allSignals.filter(s=>s.status==='open'&&s.entryPrice>0)){
     try{
       const[metric,hist,q]=await Promise.all([
-        finnhub('/stock/metric',{symbol:sig.sym,metric:'all'},key),
+        fh('/stock/metric',{symbol:sig.sym,metric:'all'},key),
         getHistory(sig.sym),
-        finnhub('/quote',{symbol:sig.sym},key),
+        fh('/quote',{symbol:sig.sym},key),
       ]);
       const mt=metric?.metric||{};
       const opIncome=mt.operatingIncomeTTM||mt.ebitTTM||null;
       const de=mt['totalDebt/totalEquityAnnual']||mt['totalDebt/totalEquityQuarterly']||null;
       const revGrowth=mt.revenueGrowthQuarterlyYoy||null;
-      const closes=hist?.closes||null;
+      const closes=Array.isArray(hist)?hist:null;
       const cur=q?.c||0;
       // Check SMC exits (fundamentals only, no RSI)
       let exitReason=null;
