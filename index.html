@@ -93,6 +93,43 @@ textarea{resize:vertical;min-height:56px}
 .top10-row{display:grid;grid-template-columns:24px 56px 1fr auto auto;gap:8px;padding:9px 16px;border-bottom:1px solid var(--border);align-items:center;font-size:11px}
 .top10-rank{font-family:var(--mono);font-size:10px;color:var(--dim);font-weight:700}
 .top10-rank.gold{color:#f5c842}.top10-rank.silver{color:#b0b0c0}.top10-rank.bronze{color:#c07840}
+/* Weekly Report Modal */
+.wr-overlay{position:fixed;inset:0;background:rgba(5,5,10,.85);z-index:900;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.wr-overlay.on{display:flex}
+.wr-modal{background:var(--panel);border:1px solid var(--border);border-radius:14px;width:90%;max-width:460px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden}
+.wr-head{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.wr-title{font-family:var(--mono);font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--orange)}
+.wr-close{background:none;border:none;color:var(--mid);font-size:18px;cursor:pointer;line-height:1;padding:0 4px}
+.wr-close:hover{color:var(--text)}
+.wr-body{padding:14px 16px;overflow-y:auto;flex:1}
+.wr-empty{text-align:center;padding:30px;color:var(--dim);font-family:var(--mono);font-size:11px}
+.wr-week-btn{width:100%;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;cursor:pointer;text-align:left;transition:all .15s;display:flex;align-items:center;justify-content:space-between}
+.wr-week-btn:hover{border-color:var(--orange);background:var(--orangedim)}
+.wr-week-label{font-family:var(--mono);font-size:12px;color:var(--text)}
+.wr-week-meta{font-family:var(--mono);font-size:10px;color:var(--mid)}
+.wr-week-count{font-family:var(--mono);font-size:10px;color:var(--orange);background:var(--orangedim);border-radius:10px;padding:2px 8px}
+/* Print / PDF styles */
+@media print{
+  body>*:not(#wr-print-frame){display:none!important}
+  #wr-print-frame{display:block!important;position:static!important}
+  @page{margin:18mm 16mm;size:letter}
+}
+#wr-print-frame{display:none;font-family:'IBM Plex Mono',monospace;background:#fff;color:#111;padding:24px;font-size:11px}
+.wr-pdf-header{border-bottom:2px solid #FF6EC7;padding-bottom:10px;margin-bottom:18px}
+.wr-pdf-eyebrow{font-size:9px;letter-spacing:3px;color:#FF6EC7;text-transform:uppercase;margin-bottom:4px}
+.wr-pdf-title{font-size:17px;font-weight:700;color:#111;margin-bottom:2px}
+.wr-pdf-sub{font-size:10px;color:#777}
+.wr-pdf-section{margin-bottom:18px}
+.wr-pdf-sec-head{font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid #eee}
+.wr-pdf-sec-head.pink{color:#FF6EC7;border-color:#ffd0ec}
+.wr-pdf-sec-head.blue{color:#00B4FF;border-color:#cceeff}
+.wr-pdf-table{width:100%;border-collapse:collapse}
+.wr-pdf-table th{text-align:left;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#999;padding:5px 8px;border-bottom:1px solid #eee}
+.wr-pdf-table td{padding:6px 8px;font-size:11px;border-bottom:1px solid #f5f5f5;vertical-align:top}
+.wr-pdf-sym{font-weight:700;color:#FF6EC7}
+.wr-pdf-sym.blue{color:#00B4FF}
+.wr-pdf-footer{margin-top:20px;padding-top:10px;border-top:1px solid #eee;font-size:9px;color:#aaa;display:flex;justify-content:space-between}
+.wr-pdf-none{color:#aaa;font-size:10px;padding:8px 0;font-style:italic}
 /* Card */
 .card{background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:8px;overflow:hidden;transition:border-color .2s}
 .card.trigger{border-color:rgba(77,186,135,.5);box-shadow:0 0 0 1px rgba(77,186,135,.1)}
@@ -363,6 +400,7 @@ textarea{resize:vertical;min-height:56px}
       <button class="tab-btn" onclick="switchTab('performance',this)">Performance</button>
       <button class="tab-btn" onclick="switchTab('info',this)">Info</button>
       <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
+      <button class="tab-btn" id="weeklyReportBtn" onclick="openWeeklyReport()" style="border-color:var(--orange);color:var(--orange);margin-left:4px">📋 Report</button>
     </div>
   </div>
 </div>
@@ -2141,6 +2179,200 @@ window.addEventListener('load',async()=>{
   // Auto-load morning scan results if scan ran today
   setTimeout(loadMorningResults, 1500);
 });
+
+// ══ WEEKLY REPORT ════════════════════════════════════════════
+
+// Returns array of {label, start, end, signals} for each week that has signals
+function getWeekRanges(){
+  if(!signalData||!signalData.length)return[];
+  // Get Monday of a date's week
+  function weekStart(d){
+    const dt=new Date(d);
+    const day=dt.getUTCDay();// 0=Sun
+    const diff=day===0?-6:1-day;// go back to Monday
+    dt.setUTCDate(dt.getUTCDate()+diff);
+    dt.setUTCHours(0,0,0,0);
+    return dt;
+  }
+  function weekEnd(monDate){
+    const fri=new Date(monDate);fri.setUTCDate(fri.getUTCDate()+4);fri.setUTCHours(23,59,59,999);return fri;
+  }
+  function fmt(d){return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',timeZone:'UTC'});}
+  // Group signals by week
+  const weeks=new Map();
+  for(const sig of signalData){
+    const mon=weekStart(sig.date);
+    const key=mon.toISOString();
+    if(!weeks.has(key))weeks.set(key,{start:mon,end:weekEnd(mon),signals:[]});
+    weeks.get(key).signals.push(sig);
+  }
+  // Sort most recent first
+  return Array.from(weeks.values())
+    .sort((a,b)=>b.start-a.start)
+    .map(w=>({
+      label:`${fmt(w.start)} — ${fmt(w.end)}`,
+      start:w.start,end:w.end,signals:w.signals,
+    }));
+}
+
+function openWeeklyReport(){
+  const overlay=document.getElementById('wrOverlay');
+  const body=document.getElementById('wrBody');
+  // Make sure signal data is loaded
+  const weeks=getWeekRanges();
+  if(!weeks.length&&!signalData.length){
+    // Try to load signals first
+    fetchSignals().then(()=>{
+      renderWeekList();
+    });
+  } else {
+    renderWeekList();
+  }
+  overlay.classList.add('on');
+}
+
+function closeWeeklyReport(){
+  document.getElementById('wrOverlay').classList.remove('on');
+}
+
+function renderWeekList(){
+  const body=document.getElementById('wrBody');
+  const weeks=getWeekRanges();
+  if(!weeks.length){
+    body.innerHTML='<div class="wr-empty">No signal history yet.<br>Run the screener to generate reports.</div>';
+    return;
+  }
+  body.innerHTML=weeks.map((w,i)=>`
+    <button class="wr-week-btn" onclick="downloadWeeklyPDF(${i})">
+      <div>
+        <div class="wr-week-label">${w.label}</div>
+        <div class="wr-week-meta">${w.signals.length} signal${w.signals.length!==1?'s':''} logged</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="wr-week-count">${w.signals.filter(s=>!s.isSmc).length} Large · ${w.signals.filter(s=>s.isSmc).length} SMC</span>
+        <span style="color:var(--orange);font-size:13px">↓ PDF</span>
+      </div>
+    </button>
+  `).join('');
+}
+
+async function fetchSignals(){
+  try{
+    const r=await fetch('/api/daily-scan?action=signals');
+    if(!r.ok)return;
+    signalData=await r.json();
+  }catch{}
+}
+
+function downloadWeeklyPDF(weekIdx){
+  const weeks=getWeekRanges();
+  if(!weeks[weekIdx])return;
+  const week=weeks[weekIdx];
+  const largeCap=week.signals.filter(s=>!s.isSmc);
+  const smc=week.signals.filter(s=>s.isSmc);
+
+  function fmt(d){return new Date(d).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',timeZone:'UTC'});}
+  function cap(s){
+    if(!s.mktCap)return'—';
+    if(s.mktCap>=10000)return`$${(s.mktCap/1000).toFixed(0)}B Large`;
+    if(s.mktCap>=2000)return`$${(s.mktCap/1000).toFixed(1)}B Mid`;
+    return`$${s.mktCap.toFixed(0)}M Small`;
+  }
+  function ret(s){
+    if(s.returnPct==null)return'—';
+    const v=s.returnPct;
+    return`${v>=0?'+':''}${v.toFixed(2)}%`;
+  }
+
+  const largeRows=largeCap.length?largeCap.map(s=>`
+    <tr>
+      <td class="wr-pdf-sym">${s.sym}</td>
+      <td>${s.name||s.sym}</td>
+      <td>${fmt(s.date)}</td>
+      <td>$${s.entryPrice?.toFixed(2)||'—'}</td>
+      <td>${s.draw!=null?s.draw+'%':'—'}</td>
+      <td>${s.rsi!=null?s.rsi:'—'}</td>
+      <td>${s.sector||'—'}</td>
+      <td style="color:${(s.returnPct||0)>=0?'#1a9c6b':'#c95f6a'}">${ret(s)}</td>
+      <td style="color:${s.status==='open'?'#1a9c6b':'#999'}">${s.status||'open'}</td>
+    </tr>`).join(''):`<tr><td colspan="9" class="wr-pdf-none">No large cap triggers this week</td></tr>`;
+
+  const smcRows=smc.length?smc.map(s=>`
+    <tr>
+      <td class="wr-pdf-sym blue">${s.sym}</td>
+      <td>${s.name||s.sym}</td>
+      <td>${fmt(s.date)}</td>
+      <td>$${s.entryPrice?.toFixed(2)||'—'}</td>
+      <td>${s.draw!=null?s.draw+'%':'—'}</td>
+      <td>${s.mktCap?'$'+s.mktCap.toFixed(0)+'M':'—'}</td>
+      <td>${s.sector||'—'}</td>
+      <td style="color:${(s.returnPct||0)>=0?'#1a9c6b':'#c95f6a'}">${ret(s)}</td>
+      <td style="color:${s.status==='open'?'#1a9c6b':'#999'}">${s.status||'open'}</td>
+    </tr>`).join(''):`<tr><td colspan="9" class="wr-pdf-none">No small/mid cap triggers this week</td></tr>`;
+
+  const printDate=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+
+  document.getElementById('wrPrintFrame').innerHTML=`
+    <div class="wr-pdf-header">
+      <div class="wr-pdf-eyebrow">◈ Hooks Screener</div>
+      <div class="wr-pdf-title">Weekly Signal Report</div>
+      <div class="wr-pdf-sub">${week.label} · Generated ${printDate}</div>
+    </div>
+
+    <div class="wr-pdf-section">
+      <div class="wr-pdf-sec-head pink">🚨 Large Cap Triggers (${largeCap.length})</div>
+      <table class="wr-pdf-table">
+        <thead><tr>
+          <th>Ticker</th><th>Name</th><th>Date</th><th>Entry</th><th>Draw%</th><th>RSI</th><th>Sector</th><th>Return</th><th>Status</th>
+        </tr></thead>
+        <tbody>${largeRows}</tbody>
+      </table>
+    </div>
+
+    <div class="wr-pdf-section">
+      <div class="wr-pdf-sec-head blue">🎯 Small / Mid Cap Triggers (${smc.length})</div>
+      <table class="wr-pdf-table">
+        <thead><tr>
+          <th>Ticker</th><th>Name</th><th>Date</th><th>Entry</th><th>Draw%</th><th>Mkt Cap</th><th>Sector</th><th>Return</th><th>Status</th>
+        </tr></thead>
+        <tbody>${smcRows}</tbody>
+      </table>
+    </div>
+
+    <div class="wr-pdf-footer">
+      <span>Hooks Screener · QVM Systematic Screener · For informational purposes only</span>
+      <span>${printDate}</span>
+    </div>
+  `;
+
+  // Trigger print dialog (Save as PDF)
+  const frame=document.getElementById('wrPrintFrame');
+  frame.style.display='block';
+  setTimeout(()=>{
+    window.print();
+    setTimeout(()=>{frame.style.display='none';},500);
+  },100);
+}
 </script>
+
+<!-- Weekly Report Modal -->
+<div class="wr-overlay" id="wrOverlay" onclick="if(event.target===this)closeWeeklyReport()">
+  <div class="wr-modal">
+    <div class="wr-head">
+      <div>
+        <div class="wr-title">📋 Weekly Reports</div>
+        <div style="font-size:10px;color:var(--mid);margin-top:3px">Select a week to download as PDF</div>
+      </div>
+      <button class="wr-close" onclick="closeWeeklyReport()">×</button>
+    </div>
+    <div class="wr-body" id="wrBody">
+      <div class="wr-empty">Loading…</div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden print frame for PDF generation -->
+<div id="wrPrintFrame"></div>
+
 </body>
 </html>
